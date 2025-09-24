@@ -2,7 +2,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useFormStatus, useForm } from 'react-hook-form';
+import { useFormStatus } from 'react-dom';
+import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Loader, Clapperboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
