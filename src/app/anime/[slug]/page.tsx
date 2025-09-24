@@ -1,22 +1,47 @@
+'use client'
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { usePathname, notFound } from 'next/navigation';
 import { Star, Calendar, Tv, Bookmark, Play } from 'lucide-react';
 import { getAnimeBySlug, getAllAnimeSlugs } from '@/lib/firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import type { Anime } from '@/lib/types';
 
-export async function generateStaticParams() {
-  const slugs = await getAllAnimeSlugs();
-  return slugs.map((slug) => ({
-    slug: slug,
-  }));
-}
 
-export default async function AnimeDetailPage({ params }: { params: { slug: string } }) {
-  const anime = await getAnimeBySlug(params.slug);
+export default function AnimeDetailPage() {
+  const pathname = usePathname();
+  const slug = pathname.split('/').pop() || '';
+  const [anime, setAnime] = useState<Anime | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (slug) {
+      getAnimeBySlug(slug).then(data => {
+        setAnime(data);
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  const handleAddToWatchlist = () => {
+    toast({
+      title: "Feature Coming Soon!",
+      description: "We're working on adding this functionality.",
+    });
+  };
+  
+  if (loading) {
+    return <div>Loading...</div>; // TODO: Add a skeleton loader
+  }
 
   if (!anime) {
     notFound();
@@ -92,7 +117,7 @@ export default async function AnimeDetailPage({ params }: { params: { slug: stri
                   Watch Episode 1
                 </Link>
               </Button>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" onClick={handleAddToWatchlist}>
                 <Bookmark className="mr-2 h-5 w-5" />
                 Add to Watchlist
               </Button>

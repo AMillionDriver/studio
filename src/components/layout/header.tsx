@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/lib/firebase/auth-provider';
 import { signOut } from '@/lib/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from './theme-toggle';
 
 const navLinks = [
   { href: '/', label: 'Browse' },
@@ -75,10 +76,11 @@ export function Header() {
               className="pl-9"
             />
           </div>
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <UserCircle className="h-5 w-5 text-accent" />
+                <UserCircle className="h-5 w-5" />
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
