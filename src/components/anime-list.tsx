@@ -107,17 +107,22 @@ export function AnimeList() {
         </TableHeader>
         <TableBody>
           {animes.map((anime) => (
-            <Collapsible key={anime.id} asChild open={openCollapsibleId === anime.id} onOpenChange={() => setOpenCollapsibleId(prevId => prevId === anime.id ? null : anime.id)}>
+            <Collapsible
+              key={anime.id}
+              asChild
+              open={openCollapsibleId === anime.id}
+              onOpenChange={() => setOpenCollapsibleId(prevId => prevId === anime.id ? null : anime.id)}
+            >
               <>
-                <TableRow className="cursor-pointer">
-                    <TableCell>
-                        <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="w-9 p-0">
-                                <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-                                <span className="sr-only">Toggle episodes</span>
-                            </Button>
-                        </CollapsibleTrigger>
-                    </TableCell>
+                <TableRow>
+                  <TableCell>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="icon" className="w-9 p-0 data-[state=open]:rotate-180">
+                        <ChevronDown className="h-4 w-4" />
+                        <span className="sr-only">Toggle episodes</span>
+                      </Button>
+                    </CollapsibleTrigger>
+                  </TableCell>
                   <TableCell className="font-medium">{anime.title}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -167,11 +172,11 @@ export function AnimeList() {
                   </TableCell>
                 </TableRow>
                 <CollapsibleContent asChild>
-                  <tr className="bg-muted/50 hover:bg-muted/50">
-                    <td colSpan={5}>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableCell colSpan={5}>
                       <AnimeEpisodeList animeId={anime.id} />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 </CollapsibleContent>
               </>
             </Collapsible>
@@ -181,4 +186,3 @@ export function AnimeList() {
     </div>
   );
 }
-
