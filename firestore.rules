@@ -1,24 +1,58 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Aturan untuk koleksi 'animes'
-    match /animes/{animeId} {
-      // Siapa saja yang sudah login dapat membaca (get, list) data anime.
-      allow read: if request.auth != null;
-      
-      // Hanya pengguna yang memiliki custom claim 'admin' bernilai true
-      // yang dapat membuat, mengubah, atau menghapus data anime.
-      allow write: if request.auth.token.admin == true;
+
+    // --- FUNGSI BANTUAN ---
+    // Fungsi untuk memeriksa apakah pengguna sudah login.
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Anda bisa menambahkan aturan untuk koleksi lain di sini.
-    // Contoh: Aturan untuk data pengguna
-    // match /users/{userId} {
-    //   allow read: if request.auth != null;
-    //   allow write: if request.auth.uid == userId; // Pengguna hanya bisa mengubah datanya sendiri
-    // }
+    // Fungsi untuk memeriksa apakah pengguna adalah admin.
+    // Lebih aman karena juga memeriksa status login.
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // --- KOLEKSI: ANIMES ---
+    match /animes/{animeId} {
+      
+      // Aturan READ: Siapa saja yang sudah login dapat membaca data.
+      // Menggunakan fungsi untuk kejelasan.
+      allow read: if isAuthenticated();
+      
+      // Aturan CREATE: Admin bisa membuat dokumen baru dengan validasi.
+      // Memastikan data yang masuk memiliki field dan tipe data yang benar.
+      allow create: if isAdmin()
+                      && request.resource.data.title is string
+                      && request.resource.data.title.size() > 0
+                      && request.resource.data.episodes is number
+                      && request.resource.data.episodes > 0
+                      && request.resource.data.createdAt == request.time; // Wajib ada timestamp saat dibuat
+
+      // Aturan UPDATE: Admin bisa memperbarui, tapi beberapa data tidak boleh diubah.
+      allow update: if isAdmin()
+                      && request.resource.data.title is string // Judul harus tetap string
+                      && request.resource.data.episodes is number // Episode harus tetap number
+                      && request.resource.data.createdAt == resource.data.createdAt; // createdAt tidak boleh diubah
+
+      // Aturan DELETE: Hanya admin yang bisa menghapus.
+      allow delete: if isAdmin();
+    }
+
+    // --- KOLEKSI: USERS (Contoh yang disempurnakan) ---
+    match /users/{userId} {
+      
+      // Pengguna hanya bisa membaca dan mengubah datanya sendiri.
+      // Admin juga diberikan akses baca untuk keperluan moderasi.
+      allow read: if request.auth.uid == userId || isAdmin();
+      
+      // Pengguna hanya bisa mengubah datanya sendiri, dengan validasi.
+      allow update: if request.auth.uid == userId
+                      && request.resource.data.username is string // Pastikan username tidak kosong
+                      && request.resource.data.username.size() > 1
+                      && request.resource.data.email == resource.data.email; // Email tidak boleh diubah
+    }
   }
 }
