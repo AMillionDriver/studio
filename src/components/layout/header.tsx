@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Logo } from './logo';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '../ui/input';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -34,13 +36,14 @@ export default function Header() {
               </div>
               <nav className="flex flex-col space-y-2 p-4">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                  >
-                    {link.label}
-                  </Link>
+                  <SheetClose asChild key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      {link.label}
+                    </Link>
+                  </SheetClose>
                 ))}
               </nav>
             </SheetContent>
@@ -60,10 +63,23 @@ export default function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
+           <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Search</DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center space-x-2">
+                <Input placeholder="Search for anime..." />
+                <Button type="submit">Search</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <ThemeToggle />
           <Button asChild variant="outline">
             <Link href="/login">Login</Link>
