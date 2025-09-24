@@ -21,7 +21,7 @@ const PersonalizedAnimeRecommendationsInputSchema = z.object({
   preferredGenres: z
     .string()
     .describe(
-      'A comma-separated list of the user\u0027s preferred anime genres, e.g., "Action, Adventure, Sci-Fi".'
+      'A comma-separated list of the user\'s preferred anime genres, e.g., "Action, Adventure, Sci-Fi".'
     ),
   numberOfRecommendations: z
     .number()
