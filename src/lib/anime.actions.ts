@@ -52,6 +52,7 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
 
   // 2. Add the document to the 'animes' collection in Firestore
   try {
+    console.log('Attempting to add document with data:', animeData);
     const docRef = await addDoc(collection(firestore, 'animes'), animeData);
     console.log('Document written with ID: ', docRef.id);
     return { success: true, docId: docRef.id };

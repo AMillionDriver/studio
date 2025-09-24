@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -29,8 +30,8 @@ service cloud.firestore {
                       && request.resource.data.title.size() > 0
                       && request.resource.data.episodes is number
                       && request.resource.data.episodes > 0
-                      && request.resource.data.createdAt == request.time
-                      && request.resource.data.updatedAt == request.time; // Wajib ada timestamp saat dibuat
+                      && request.resource.data.createdAt is timestamp
+                      && request.resource.data.updatedAt is timestamp;
 
       // Aturan UPDATE: Admin bisa memperbarui, tapi beberapa data tidak boleh diubah.
       allow update: if isAdmin()
