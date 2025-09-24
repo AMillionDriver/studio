@@ -16,11 +16,14 @@ import {
   updatePassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  AuthError
+  AuthError,
+  updateProfile,
+  linkWithPopup
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { uploadProfilePicture } from '@/lib/firebase/storage';
 
 const auth = getAuth(app);
 
@@ -34,6 +37,8 @@ export interface AuthContextType {
   sendPasswordResetEmail: (email: string) => Promise<void>;
   changeUserPassword: (oldPass: string, newPass: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUserProfile: (data: { displayName?: string; photoFile?: File | null }) => Promise<void>;
+  linkWithGoogle: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +67,8 @@ const formatAuthError = (errorCode: string): string => {
         return 'Kode verifikasi salah. Silakan coba lagi.';
     case 'auth/requires-recent-login':
         return 'Operasi ini memerlukan autentikasi ulang. Silakan login kembali dan coba lagi.';
+    case 'auth/credential-already-in-use':
+        return 'Akun Google ini sudah ditautkan dengan pengguna lain.';
     default:
       return 'Terjadi kesalahan otentikasi. Silakan coba lagi.';
   }
@@ -199,6 +206,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
     }
   };
+
+  const updateUserProfile = async (data: { displayName?: string; photoFile?: File | null }) => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      let photoURL = user.photoURL;
+      if (data.photoFile) {
+        photoURL = await uploadProfilePicture(user.uid, data.photoFile);
+      }
+
+      await updateProfile(user, {
+        displayName: data.displayName,
+        photoURL: photoURL
+      });
+
+      // Manually update the user object as onAuthStateChanged might not fire immediately
+      setUser({ ...user }); 
+
+      toast({
+        title: "Profil Diperbarui",
+        description: "Informasi profil Anda telah berhasil diperbarui.",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Gagal Memperbarui Profil",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const linkWithGoogle = async () => {
+    if (!auth.currentUser) return;
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await linkWithPopup(auth.currentUser, provider);
+      toast({
+        title: "Akun Berhasil Ditautkan",
+        description: "Akun Google Anda telah berhasil ditautkan.",
+      });
+    } catch (error: any) {
+       handleAuthError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
 
   const signOut = async () => {
@@ -219,7 +277,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, sendPasswordResetEmail, changeUserPassword };
+  const value = { 
+    user, 
+    loading, 
+    signInWithGoogle, 
+    signOut, 
+    signUpWithEmail, 
+    signInWithEmail, 
+    signInAnonymously, 
+    sendPasswordResetEmail, 
+    changeUserPassword,
+    updateUserProfile,
+    linkWithGoogle
+  };
 
   return (
     <AuthContext.Provider value={value}>
