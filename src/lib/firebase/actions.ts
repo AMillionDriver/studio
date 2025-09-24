@@ -6,7 +6,7 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { z } from 'zod';
-import { auth } from './sdk'; // We will use the initialized auth object
+import { auth } from './sdk'; 
 
 
 const emailLoginSchema = z.object({
@@ -30,8 +30,6 @@ export async function signUpWithEmail(
 
   try {
     await createUserWithEmailAndPassword(auth, result.data.email, result.data.password);
-    // Also sign in the user right after they sign up
-    await signInWithEmailAndPassword(auth, result.data.email, result.data.password);
     return { success: true };
   } catch (e: any) {
     return { error: e.message };
@@ -60,7 +58,8 @@ export async function signOut(): Promise<FormState> {
   try {
     await firebaseSignOut(auth);
     return { success: true };
-  } catch (e: any) {
+  } catch (e: any)
+{
     return { error: e.message };
   }
 }
