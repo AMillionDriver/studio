@@ -18,7 +18,8 @@ import {
   reauthenticateWithCredential,
   AuthError,
   updateProfile,
-  linkWithPopup
+  linkWithPopup,
+  getIdTokenResult
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
@@ -27,8 +28,12 @@ import { uploadProfilePicture } from '@/lib/firebase/storage';
 
 const auth = getAuth(app);
 
+export interface AppUser extends User {
+  isAdmin?: boolean;
+}
+
 export interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
@@ -76,14 +81,20 @@ const formatAuthError = (errorCode: string): string => {
 
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const idTokenResult = await getIdTokenResult(firebaseUser);
+        const isAdmin = idTokenResult.claims.admin === true;
+        setUser({ ...firebaseUser, isAdmin });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -223,7 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       // Manually update the user object as onAuthStateChanged might not fire immediately
-      setUser({ ...user }); 
+      setUser({ ...user, ...await getAuth().currentUser }); 
 
       toast({
         title: "Profil Diperbarui",

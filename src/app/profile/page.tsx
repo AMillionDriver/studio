@@ -17,6 +17,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { AdminBadge } from "@/components/layout/admin-badge";
 
 const passwordFormSchema = z.object({
   oldPassword: z.string().min(1, { message: "Current password is required." }),
@@ -139,7 +140,10 @@ export default function ProfilePage() {
               <div className="flex-1">
                 {!isEditingProfile ? (
                   <>
-                    <CardTitle className="text-2xl">{user.displayName || "Guest User"}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-2xl">{user.displayName || "Guest User"}</CardTitle>
+                      {user.isAdmin && <AdminBadge />}
+                    </div>
                     <CardDescription>{user.isAnonymous ? "You are browsing as a guest." : user.email}</CardDescription>
                   </>
                 ) : (
