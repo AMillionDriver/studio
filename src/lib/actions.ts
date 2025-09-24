@@ -94,12 +94,19 @@ export async function seedInitialData() {
 export type AdminCreationState = {
   status: 'idle' | 'loading' | 'success' | 'error' | 'already_exists';
   message: string;
+  errors: Record<string, string>;
 }
 
-const adminCreationSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
-});
+const adminCreationSchema = z
+  .object({
+    email: z.string().email({ message: 'Please enter a valid email.' }),
+    password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match.",
+    path: ['confirmPassword'],
+  });
 
 
 export async function createAdminAccount(
@@ -107,13 +114,20 @@ export async function createAdminAccount(
   formData: FormData
 ): Promise<AdminCreationState> {
   
-    const validatedFields = adminCreationSchema.safeParse({
-        email: formData.get('email'),
-        password: formData.get('password')
-    });
+    const validatedFields = adminCreationSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    );
 
     if (!validatedFields.success) {
-        return { status: 'error', message: 'Invalid email or password format.' };
+        const fieldErrors: Record<string, string> = {};
+        for (const issue of validatedFields.error.issues) {
+            fieldErrors[issue.path[0]] = issue.message;
+        }
+        return { 
+            status: 'error', 
+            message: 'Please correct the errors below.',
+            errors: fieldErrors,
+        };
     }
 
     const { email, password } = validatedFields.data;
@@ -121,12 +135,12 @@ export async function createAdminAccount(
     const result = await signUpWithEmail({ email, password });
 
     if (result.success) {
-        return { status: 'success', message: 'Admin account created successfully! Redirecting...' };
+        return { status: 'success', message: 'Admin account created successfully! Redirecting...', errors: {} };
     }
 
     if (result.error && (result.error.includes('already-in-use') || result.error.includes('already registered'))) {
-        return { status: 'already_exists', message: 'Admin account already exists. Redirecting...' };
+        return { status: 'already_exists', message: 'Admin account already exists. Redirecting...', errors: {} };
     }
 
-    return { status: 'error', message: result.error || 'An unknown error occurred.' };
+    return { status: 'error', message: result.error || 'An unknown error occurred.', errors: {} };
 }

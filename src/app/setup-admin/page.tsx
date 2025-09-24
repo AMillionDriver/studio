@@ -3,9 +3,10 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Loader, Clapperboard } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,33 +15,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createAdminAccount, type AdminCreationState } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import Link from 'next/link';
-
-const adminSignupSchema = z
-  .object({
-    email: z.string().email({ message: 'Please enter a valid email.' }),
-    password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  });
-
-type AdminSignupFormValues = z.infer<typeof adminSignupSchema>;
 
 
 function SubmitButton() {
@@ -71,31 +49,27 @@ export default function SetupAdminPage() {
   const initialState: AdminCreationState = {
     status: 'idle',
     message: '',
+    errors: {},
   };
 
   const [state, formAction] = useActionState(createAdminAccount, initialState);
 
-  const form = useForm<AdminSignupFormValues>({
-    resolver: zodResolver(adminSignupSchema),
-    defaultValues: {
-      email: 'nanangnurmansah5@gmail.com',
-      password: '',
-      confirmPassword: ''
-    },
-  });
-
-   // Sync useActionState with react-hook-form
-   if (state.status === 'error' && state.message && !form.formState.isSubmitted) {
-    form.setError('root', { type: 'custom', message: state.message });
-  }
-
-  if (state.status === 'success' || state.status === 'already_exists') {
-    toast({
-        title: state.status === 'success' ? 'Admin Account Created' : 'Admin Account Ready',
-        description: state.message,
-    });
-    router.push('/login');
-  }
+  useEffect(() => {
+    if (state.status === 'success' || state.status === 'already_exists') {
+      toast({
+          title: state.status === 'success' ? 'Admin Account Created' : 'Admin Account Ready',
+          description: state.message,
+      });
+      router.push('/login');
+    } else if (state.status === 'error' && state.message && !Object.keys(state.errors).length) {
+        // General server-side errors that aren't field-specific
+        toast({
+            variant: 'destructive',
+            title: 'Admin Creation Failed',
+            description: state.message,
+        });
+    }
+  }, [state, router, toast]);
 
 
   return (
@@ -111,81 +85,50 @@ export default function SetupAdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <Form {...form}>
-                <form 
-                    action={form.handleSubmit(data => {
-                        const formData = new FormData();
-                        formData.append('email', data.email);
-                        formData.append('password', data.password);
-                        formAction(formData);
-                    })} 
-                    className="grid gap-4"
-                >
-                    <FormField
-                        control={form.control}
+            <form action={formAction} className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="email">Admin Email</Label>
+                    <Input
+                        id="email"
                         name="email"
-                        render={({ field }) => (
-                        <FormItem className="grid gap-2">
-                            <FormLabel>Admin Email</FormLabel>
-                            <FormControl>
-                            <Input
-                                type="email"
-                                placeholder="admin@example.com"
-                                {...field}
-                                disabled={form.formState.isSubmitting}
-                            />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
+                        type="email"
+                        placeholder="admin@example.com"
+                        defaultValue="nanangnurmansah5@gmail.com"
                     />
-                     <FormField
-                        control={form.control}
+                    {state.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email}</p>}
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input 
+                        id="password"
                         name="password"
-                        render={({ field }) => (
-                        <FormItem className="grid gap-2">
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                            <Input 
-                                type="password" 
-                                {...field} 
-                                disabled={form.formState.isSubmitting}
-                            />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
+                        type="password" 
                     />
-                    <FormField
-                        control={form.control}
+                    {state.errors?.password && <p className="text-sm font-medium text-destructive">{state.errors.password}</p>}
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                        id="confirmPassword"
                         name="confirmPassword"
-                        render={({ field }) => (
-                        <FormItem className="grid gap-2">
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                            <Input 
-                                type="password" 
-                                {...field} 
-                                disabled={form.formState.isSubmitting}
-                            />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
+                        type="password"
                     />
-                    <SubmitButton />
-                     {state.status === 'error' && state.message && (
-                        <p className="text-sm font-medium text-destructive text-center">
-                            {state.message}
-                        </p>
-                    )}
-                     {(state.status === 'success' || state.status === 'already_exists') && (
-                        <p className="text-sm text-center text-muted-foreground">
-                            Redirecting to login...
-                        </p>
-                    )}
-                </form>
-            </Form>
+                     {state.errors?.confirmPassword && <p className="text-sm font-medium text-destructive">{state.errors.confirmPassword}</p>}
+                </div>
+                
+                <SubmitButton />
+                
+                {state.status === 'error' && state.message && !Object.keys(state.errors).length && (
+                    <p className="text-sm font-medium text-destructive text-center">
+                        {state.message}
+                    </p>
+                )}
+                 {(state.status === 'success' || state.status === 'already_exists') && (
+                    <p className="text-sm text-center text-muted-foreground">
+                        Redirecting to login...
+                    </p>
+                )}
+            </form>
         </CardContent>
       </Card>
     </div>
