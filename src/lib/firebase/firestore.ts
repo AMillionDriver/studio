@@ -69,6 +69,8 @@ function docToAnimeSerializable(doc: any): AnimeSerializable {
     // Convert Firestore Timestamps to serializable strings
     const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
     const updatedAt = (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+    const releaseDate = (data.releaseDate as Timestamp)?.toDate().toISOString() || undefined;
+
 
     return {
         id: doc.id,
@@ -81,5 +83,6 @@ function docToAnimeSerializable(doc: any): AnimeSerializable {
         episodes: data.episodes,
         createdAt: createdAt,
         updatedAt: updatedAt,
+        releaseDate: releaseDate
     };
 }

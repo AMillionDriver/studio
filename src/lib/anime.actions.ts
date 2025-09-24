@@ -1,9 +1,10 @@
 
 'use server';
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeFormData } from '@/types/anime';
+import { revalidatePath } from 'next/cache';
 
 const firestore = getFirestore(adminApp);
 
@@ -15,7 +16,7 @@ const firestore = getFirestore(adminApp);
  */
 export async function addAnime(formData: AnimeFormData): Promise<{ success: boolean; docId?: string; error?: string }> {
   
-  const { title, description, streamUrl, coverImageUrl, genres, episodes, rating } = formData;
+  const { title, description, streamUrl, coverImageUrl, genres, episodes, rating, releaseDate } = formData;
 
   if (!title || !description || !streamUrl || !coverImageUrl || !genres || !episodes) {
     return { success: false, error: 'Missing required fields. Please fill out all parts of the form.' };
@@ -44,6 +45,7 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
       episodes: episodesNum,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
+      releaseDate: releaseDate ? Timestamp.fromDate(releaseDate) : FieldValue.serverTimestamp(),
     };
 
   } catch (error: any) {
@@ -56,9 +58,30 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
     console.log('Attempting to add document with data using Admin SDK:', animeData);
     const docRef = await firestore.collection('animes').add(animeData);
     console.log('Document written with ID: ', docRef.id);
+    revalidatePath('/admin-panel'); // Revalidate the admin page to show the new anime
     return { success: true, docId: docRef.id };
   } catch (error: any) {
     console.error('Error adding document to Firestore with Admin SDK: ', error);
     return { success: false, error: `Failed to save data to database: ${error.message}` };
   }
+}
+
+/**
+ * Deletes an anime document from Firestore.
+ * @param animeId The ID of the anime to delete.
+ * @returns An object indicating success or failure.
+ */
+export async function deleteAnime(animeId: string): Promise<{ success: boolean; error?: string }> {
+    if (!animeId) {
+        return { success: false, error: 'Anime ID is required.' };
+    }
+    try {
+        await firestore.collection('animes').doc(animeId).delete();
+        revalidatePath('/admin-panel'); // Revalidate the admin page
+        revalidatePath('/'); // Revalidate the home page
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error deleting anime ${animeId}:`, error);
+        return { success: false, error: `Failed to delete anime: ${error.message}` };
+    }
 }

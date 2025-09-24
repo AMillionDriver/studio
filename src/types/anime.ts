@@ -13,12 +13,14 @@ export interface Anime {
     episodes: number;
     createdAt: FieldValue | Timestamp;
     updatedAt: FieldValue | Timestamp;
+    releaseDate?: FieldValue | Timestamp;
 }
 
 // Type for data used in client components (serializable)
-export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt'> {
+export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt' | 'releaseDate'> {
     createdAt: string;
     updatedAt: string;
+    releaseDate?: string;
 }
 
 
@@ -30,4 +32,5 @@ export interface AnimeFormData {
     genres: string;
     rating?: string;
     episodes: string;
+    releaseDate?: Date;
 }
