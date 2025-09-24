@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { personalizedAnimeRecommendations } from '@/ai/flows/personalized-anime-recommendations';
 import { getAnimes } from './firebase/firestore';
+import { seedDatabase } from './firebase/seed';
 
 const recommendationSchema = z.object({
   viewingHistory: z.string().min(1, 'Please enter at least one anime title.'),
@@ -76,4 +77,13 @@ export async function getInitialRecommendationState(): Promise<RecommendationSta
     status: 'idle',
     genres: allGenres,
   };
+}
+
+export async function seedInitialData() {
+  try {
+    const result = await seedDatabase();
+    return { success: true, message: `Successfully seeded ${result.count} anime shows.` };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
 }
