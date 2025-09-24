@@ -13,6 +13,9 @@ import {
   signInWithEmailAndPassword,
   signInAnonymously as firebaseSignInAnonymously,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   AuthError
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
@@ -29,6 +32,7 @@ export interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signInAnonymously: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
+  changeUserPassword: (oldPass: string, newPass: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -56,6 +60,8 @@ const formatAuthError = (errorCode: string): string => {
         return 'Nomor telepon tidak valid. Pastikan formatnya benar (misal: +6281234567890).';
     case 'auth/invalid-verification-code':
         return 'Kode verifikasi salah. Silakan coba lagi.';
+    case 'auth/requires-recent-login':
+        return 'Operasi ini memerlukan autentikasi ulang. Silakan login kembali dan coba lagi.';
     default:
       return 'Terjadi kesalahan otentikasi. Silakan coba lagi.';
   }
@@ -160,6 +166,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
     }
   }
+
+  const changeUserPassword = async (oldPass: string, newPass: string) => {
+    if (!user || !user.email) {
+        toast({
+            title: "Error",
+            description: "No user is currently signed in.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    try {
+        const credential = EmailAuthProvider.credential(user.email, oldPass);
+        
+        // Re-authenticate user
+        await reauthenticateWithCredential(user, credential);
+        
+        // Update password
+        await updatePassword(user, newPass);
+        
+        toast({
+            title: "Password Updated",
+            description: "Your password has been changed successfully.",
+        });
+
+    } catch (error: any) {
+        toast({
+            title: "Password Change Failed",
+            description: formatAuthError(error.code),
+            variant: "destructive",
+        });
+    }
+  };
   
 
   const signOut = async () => {
@@ -180,7 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, sendPasswordResetEmail };
+  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, sendPasswordResetEmail, changeUserPassword };
 
   return (
     <AuthContext.Provider value={value}>
