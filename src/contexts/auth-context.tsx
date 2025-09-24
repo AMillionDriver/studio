@@ -44,12 +44,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithPopup(auth, provider);
       router.push('/');
     } catch (error: any) {
-      console.error("Error signing in with Google", error);
-      toast({
-        title: "Login Gagal",
-        description: `Terjadi kesalahan: ${error.message}`,
-        variant: "destructive",
-      });
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: "Login Dibatalkan",
+          description: "Anda menutup jendela login sebelum proses selesai.",
+          variant: "default",
+        });
+      } else {
+        console.error("Error signing in with Google", error);
+        toast({
+          title: "Login Gagal",
+          description: `Terjadi kesalahan: ${error.message}`,
+          variant: "destructive",
+        });
+      }
        setLoading(false);
     }
   };
@@ -85,4 +93,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
