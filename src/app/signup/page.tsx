@@ -67,6 +67,7 @@ export default function SignupPage() {
         description: "Welcome! You're now logged in.",
       });
       router.push('/dashboard');
+      router.refresh(); // Refresh to update auth state in header
     }
   };
 

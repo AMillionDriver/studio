@@ -26,8 +26,6 @@ import {
 import { signInWithEmail } from '@/lib/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase/sdk';
-import { onAuthStateChanged } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -67,6 +65,7 @@ export default function LoginPage() {
       } else {
         router.push('/dashboard');
       }
+      router.refresh(); // Refresh to update auth state in header
     }
   };
 
