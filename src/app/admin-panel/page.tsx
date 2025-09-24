@@ -26,11 +26,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Clapperboard } from "lucide-react";
 
+const MAX_FILE_SIZE = 5000000; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
 const animeFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   streamUrl: z.string().url("Please enter a valid URL."),
-  imageUrl: z.string().url("Please enter a valid image URL."),
+  coverImage: z
+    .any()
+    .refine((files) => files?.length > 0, "Cover image is required.")
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png, .webp and .gif files are accepted."
+    ),
   genres: z.string().min(1, "At least one genre is required."),
   rating: z.coerce.number().min(0).max(10).optional(),
   episodes: z.coerce.number().int().min(1, "At least one episode is required."),
@@ -46,20 +56,33 @@ export default function AdminPanelPage() {
       title: "",
       description: "",
       streamUrl: "",
-      imageUrl: "",
       genres: "",
     },
   });
 
+  const coverImageRef = form.register("coverImage");
+
   const onSubmit = (data: AnimeFormValues) => {
-    console.log(data);
+    console.log({
+        ...data,
+        coverImage: data.coverImage[0]
+    });
     // Here you would typically call a server action or API endpoint 
-    // to save this data to your database (e.g., Firestore).
+    // to upload the file to storage (e.g., Firebase Storage) and then
+    // save the anime data (with the image URL) to your database.
     toast({
       title: "Anime Added (Simulated)",
       description: (
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+          <code className="text-white">{JSON.stringify({
+            title: data.title,
+            description: data.description,
+            streamUrl: data.streamUrl,
+            coverImage: data.coverImage[0]?.name,
+            genres: data.genres,
+            rating: data.rating,
+            episodes: data.episodes,
+          }, null, 2)}</code>
         </pre>
       ),
     });
@@ -134,15 +157,15 @@ export default function AdminPanelPage() {
                 />
                 <FormField
                     control={form.control}
-                    name="imageUrl"
+                    name="coverImage"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Cover Image URL</FormLabel>
+                        <FormLabel>Cover Image</FormLabel>
                         <FormControl>
-                        <Input placeholder="https://example.com/image.jpg" {...field} />
+                           <Input type="file" accept={ACCEPTED_IMAGE_TYPES.join(",")} {...coverImageRef} />
                         </FormControl>
                          <FormDescription>
-                            Link to the anime's poster/cover image.
+                            Upload the anime's poster/cover image.
                         </FormDescription>
                         <FormMessage />
                     </FormItem>
