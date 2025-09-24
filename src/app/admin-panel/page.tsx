@@ -25,8 +25,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Clapperboard } from "lucide-react";
+import { addAnime } from "@/lib/anime.actions";
+import type { AnimeFormData } from "@/types/anime";
 
-const MAX_FILE_SIZE = 5000000; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 
 const animeFormSchema = z.object({
@@ -59,36 +61,40 @@ export default function AdminPanelPage() {
       genres: "",
       rating: undefined,
       episodes: undefined,
+      coverImage: undefined,
     },
   });
 
   const coverImageRef = form.register("coverImage");
 
-  const onSubmit = (data: AnimeFormValues) => {
-    console.log({
-        ...data,
-        coverImage: data.coverImage[0]
-    });
-    // Here you would typically call a server action or API endpoint 
-    // to upload the file to storage (e.g., Firebase Storage) and then
-    // save the anime data (with the image URL) to your database.
-    toast({
-      title: "Anime Added (Simulated)",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify({
-            title: data.title,
-            description: data.description,
-            streamUrl: data.streamUrl,
-            coverImage: data.coverImage[0]?.name,
-            genres: data.genres,
-            rating: data.rating,
-            episodes: data.episodes,
-          }, null, 2)}</code>
-        </pre>
-      ),
-    });
-    form.reset();
+  const onSubmit = async (data: AnimeFormValues) => {
+    const coverImageFile = data.coverImage[0];
+
+    const formData: AnimeFormData = {
+        title: data.title,
+        description: data.description,
+        streamUrl: data.streamUrl,
+        genres: data.genres.split(',').map(g => g.trim()),
+        rating: data.rating,
+        episodes: data.episodes,
+        coverImage: coverImageFile,
+    };
+    
+    try {
+        await addAnime(formData);
+        toast({
+            title: "Success!",
+            description: "A new anime has been added to the database.",
+        });
+        form.reset();
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "Error",
+            description: "Failed to add anime. Please check the console for details.",
+            variant: "destructive",
+        });
+    }
   };
 
   return (
@@ -230,3 +236,5 @@ export default function AdminPanelPage() {
     </div>
   );
 }
+
+    
