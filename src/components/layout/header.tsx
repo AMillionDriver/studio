@@ -1,9 +1,17 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Search, Clapperboard } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Logo } from './logo';
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/genre', label: 'Genre' },
+  { href: '/jadwal', label: 'Jadwal' },
+  { href: '/riwayat', label: 'Riwayat' },
+  { href: '/bookmark', label: 'Bookmark' },
+];
 
 export default function Header() {
   return (
@@ -21,10 +29,20 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="pr-0">
-              <Logo />
-              <div className="flex flex-col space-y-2 mt-4">
-                {/* Mobile Nav Links Here */}
+              <div className="p-4">
+                <Logo />
               </div>
+              <nav className="flex flex-col space-y-2 p-4">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
             </SheetContent>
           </Sheet>
           <div className="md:hidden">
@@ -33,8 +51,12 @@ export default function Header() {
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex md:flex-1 md:items-center md:space-x-4">
-          {/* Desktop Nav Links Here */}
+        <nav className="hidden items-center space-x-2 md:flex">
+           {navLinks.map((link) => (
+            <Button key={link.href} asChild variant="link" className="text-muted-foreground hover:text-foreground">
+              <Link href={link.href}>{link.label}</Link>
+            </Button>
+          ))}
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
