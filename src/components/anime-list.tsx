@@ -116,11 +116,12 @@ export function AnimeList() {
               </TableCell>
               <TableCell className="text-center">{anime.episodes}</TableCell>
               <TableCell className="text-right space-x-1">
-                <Link href={`/admin-panel/edit/${anime.id}`} passHref>
-                    <Button variant="ghost" size="icon" asChild>
-                        <a><Edit className="h-4 w-4 text-muted-foreground" /></a>
-                    </Button>
-                </Link>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href={`/admin-panel/edit/${anime.id}`}>
+                    <Edit className="h-4 w-4 text-muted-foreground" />
+                    <span className="sr-only">Edit</span>
+                  </Link>
+                </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
