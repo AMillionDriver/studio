@@ -23,8 +23,9 @@ async function uploadFile(file: File, path: string): Promise<string> {
 /**
  * Adds a new anime document to Firestore and uploads its cover image to Storage.
  * @param formData The anime data from the form.
+ * @returns An object indicating success or failure.
  */
-export async function addAnime(formData: AnimeFormData) {
+export async function addAnime(formData: AnimeFormData): Promise<{ success: boolean; docId?: string; error?: string }> {
   try {
     // 1. Upload Cover Image to Firebase Storage
     const coverImagePath = `anime-covers/${Date.now()}_${formData.coverImage.name}`;
@@ -51,12 +52,7 @@ export async function addAnime(formData: AnimeFormData) {
 
   } catch (error) {
     console.error('Error adding anime: ', error);
-    // Re-throw the error to be caught by the client-side form handler
-    if (error instanceof Error) {
-        throw new Error(`Failed to add anime: ${error.message}`);
-    }
-    throw new Error('An unknown error occurred while adding the anime.');
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { success: false, error: `Failed to add anime: ${errorMessage}` };
   }
 }
-
-    

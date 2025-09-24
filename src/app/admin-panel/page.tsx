@@ -81,17 +81,25 @@ export default function AdminPanelPage() {
     };
     
     try {
-        await addAnime(formData);
-        toast({
-            title: "Success!",
-            description: "A new anime has been added to the database.",
-        });
-        form.reset();
+        const result = await addAnime(formData);
+        if (result.success) {
+            toast({
+                title: "Success!",
+                description: "A new anime has been added to the database.",
+            });
+            form.reset();
+        } else {
+             toast({
+                title: "Error",
+                description: result.error || "Failed to add anime. Please try again.",
+                variant: "destructive",
+            });
+        }
     } catch (error) {
         console.error(error);
         toast({
             title: "Error",
-            description: "Failed to add anime. Please check the console for details.",
+            description: "An unexpected client-side error occurred. Please check the console.",
             variant: "destructive",
         });
     }
@@ -236,5 +244,3 @@ export default function AdminPanelPage() {
     </div>
   );
 }
-
-    
