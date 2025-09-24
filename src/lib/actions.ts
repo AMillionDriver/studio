@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -89,27 +90,41 @@ export async function seedInitialData() {
   }
 }
 
-// Admin Creation Action
-const ADMIN_EMAIL = 'nanangnurmansah5@gmail.com';
-const ADMIN_PASSWORD = 'admin123';
 
 export type AdminCreationState = {
   status: 'idle' | 'loading' | 'success' | 'error' | 'already_exists';
   message: string;
 }
 
+const adminCreationSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+});
+
+
 export async function createAdminAccount(
   prevState: AdminCreationState,
   formData: FormData
 ): Promise<AdminCreationState> {
   
-    const result = await signUpWithEmail({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+    const validatedFields = adminCreationSchema.safeParse({
+        email: formData.get('email'),
+        password: formData.get('password')
+    });
+
+    if (!validatedFields.success) {
+        return { status: 'error', message: 'Invalid email or password format.' };
+    }
+
+    const { email, password } = validatedFields.data;
+
+    const result = await signUpWithEmail({ email, password });
 
     if (result.success) {
         return { status: 'success', message: 'Admin account created successfully! Redirecting...' };
     }
 
-    if (result.error && result.error.includes('already registered')) {
+    if (result.error && (result.error.includes('already-in-use') || result.error.includes('already registered'))) {
         return { status: 'already_exists', message: 'Admin account already exists. Redirecting...' };
     }
 
