@@ -30,10 +30,11 @@ export async function signUpWithEmail(
   const { email, password } = validatedFields.data;
   
   try {
+    // This is the function that creates the user in Firebase Auth
     await createUserWithEmailAndPassword(auth, email, password);
     return { success: true };
   } catch (e: any) {
-    console.error(e);
+    console.error("Sign up error:", e.code, e.message);
     // Firebase often returns complex error objects. We simplify them for the user.
     if (e.code === 'auth/email-already-in-use') {
         return { error: 'This email is already registered. Please login instead.' };
@@ -57,7 +58,7 @@ export async function signInWithEmail(
     await signInWithEmailAndPassword(auth, email, password);
     return { success: true };
   } catch (e: any) {
-    console.error(e);
+    console.error("Sign in error:", e.code, e.message);
     // Provide a generic error to avoid leaking information about which field was wrong.
     return { error: 'Login failed. Please check your email and password.' };
   }
@@ -68,7 +69,7 @@ export async function signOut(): Promise<FormState> {
     await firebaseSignOut(auth);
     return { success: true };
   } catch (e: any) {
-    console.error(e);
+    console.error("Sign out error:", e.code, e.message);
     return { error: 'Failed to sign out. Please try again.' };
   }
 }

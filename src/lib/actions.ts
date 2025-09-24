@@ -132,15 +132,18 @@ export async function createAdminAccount(
 
     const { email, password } = validatedFields.data;
 
+    // Use the rewritten, more reliable signUpWithEmail function
     const result = await signUpWithEmail({ email, password });
 
     if (result.success) {
         return { status: 'success', message: 'Admin account created successfully! Redirecting...', errors: {} };
     }
 
-    if (result.error && (result.error.includes('already-in-use') || result.error.includes('already registered'))) {
+    // Check for the specific "already-in-use" error message from the rewritten action
+    if (result.error && (result.error.includes('already registered'))) {
         return { status: 'already_exists', message: 'Admin account already exists. Redirecting...', errors: {} };
     }
 
+    // Return any other error messages directly
     return { status: 'error', message: result.error || 'An unknown error occurred.', errors: {} };
 }
