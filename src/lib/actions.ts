@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { personalizedAnimeRecommendations } from '@/ai/flows/personalized-anime-recommendations';
+import { getAnimes } from './firebase/firestore';
 
 const recommendationSchema = z.object({
   viewingHistory: z.string().min(1, 'Please enter at least one anime title.'),
@@ -16,6 +17,7 @@ export type RecommendationState = {
   status: 'idle' | 'loading' | 'success' | 'error';
   recommendations?: string[];
   error?: string;
+  genres?: string[];
 };
 
 export async function getRecommendations(
@@ -60,4 +62,18 @@ export async function getRecommendations(
       error: e.message || 'An unknown error occurred.',
     };
   }
+}
+
+export async function getInitialRecommendationState(): Promise<RecommendationState> {
+  const animes = await getAnimes();
+  const allGenres = [...new Set(animes.flatMap(anime => anime.genres))];
+
+  return {
+    form: {
+      viewingHistory: 'Attack on Titan, Naruto',
+      preferredGenres: 'Action, Sci-Fi',
+    },
+    status: 'idle',
+    genres: allGenres,
+  };
 }

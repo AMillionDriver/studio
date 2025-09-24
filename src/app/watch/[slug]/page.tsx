@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { mockAnimeData } from '@/lib/data';
+import { getAnimes } from '@/lib/firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { VideoPlayer } from '@/components/anime/video-player';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,8 +9,9 @@ import { cn } from '@/lib/utils';
 import { Play } from 'lucide-react';
 
 
-export default function WatchPage({ params }: { params: { slug: string } }) {
-  const anime = mockAnimeData.find((a) => a.episodes.some(e => e.slug === params.slug));
+export default async function WatchPage({ params }: { params: { slug: string } }) {
+  const animes = await getAnimes();
+  const anime = animes.find((a) => a.episodes.some(e => e.slug === params.slug));
   const episode = anime?.episodes.find(e => e.slug === params.slug);
 
   if (!anime || !episode) {

@@ -5,14 +5,10 @@ import { useFormState, useFormStatus } from 'react-dom';
 import { WandSparkles, Loader, ServerCrash, Star } from 'lucide-react';
 import { getRecommendations, type RecommendationState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { genres as allGenres } from '@/lib/data';
-
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -34,14 +30,11 @@ function SubmitButton() {
   );
 }
 
-export function RecommendationForm() {
-  const initialState: RecommendationState = {
-    form: {
-      viewingHistory: 'Attack on Titan, Naruto',
-      preferredGenres: 'Action, Sci-Fi',
-    },
-    status: 'idle',
-  };
+type RecommendationFormProps = {
+  initialState: RecommendationState;
+}
+
+export function RecommendationForm({ initialState }: RecommendationFormProps) {
   const [state, formAction] = useFormState(getRecommendations, initialState);
   const { toast } = useToast();
 
@@ -56,8 +49,8 @@ export function RecommendationForm() {
   }, [state, toast]);
 
   return (
-    <>
-      <Card className="w-full max-w-2xl">
+    <div className="w-full max-w-2xl">
+      <Card>
         <form action={formAction}>
           <CardHeader>
             <CardTitle className="font-headline">Find Your Next Favorite Anime</CardTitle>
@@ -65,7 +58,7 @@ export function RecommendationForm() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="viewingHistory">What have you watched?</Label>
+              <label htmlFor="viewingHistory" className="text-sm font-medium">What have you watched?</label>
               <Textarea
                 id="viewingHistory"
                 name="viewingHistory"
@@ -75,7 +68,7 @@ export function RecommendationForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="preferredGenres">What are your favorite genres?</Label>
+              <label htmlFor="preferredGenres" className="text-sm font-medium">What are your favorite genres?</label>
               <Textarea
                 id="preferredGenres"
                 name="preferredGenres"
@@ -84,7 +77,7 @@ export function RecommendationForm() {
                  rows={2}
               />
                <p className="text-xs text-muted-foreground">
-                Available genres: {allGenres.join(', ')}
+                Available genres: {initialState.genres?.join(', ')}
               </p>
             </div>
           </CardContent>
@@ -95,7 +88,7 @@ export function RecommendationForm() {
       </Card>
       
       {state.status === 'success' && state.recommendations && (
-        <div className="mt-8 w-full max-w-2xl">
+        <div className="mt-8">
             <h3 className="text-2xl font-bold mb-4 text-center font-headline">Your AI Recommendations</h3>
              <Card>
                 <CardContent className="p-6">
@@ -113,7 +106,7 @@ export function RecommendationForm() {
       )}
 
       {state.status === 'error' && !state.recommendations && (
-        <Alert variant="destructive" className="mt-8 w-full max-w-2xl">
+        <Alert variant="destructive" className="mt-8">
             <ServerCrash className="h-4 w-4" />
             <AlertTitle>Something went wrong!</AlertTitle>
             <AlertDescription>
@@ -121,6 +114,6 @@ export function RecommendationForm() {
             </AlertDescription>
         </Alert>
       )}
-    </>
+    </div>
   );
 }

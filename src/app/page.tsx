@@ -1,16 +1,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { mockAnimeData } from '@/lib/data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { AnimeCard } from '@/components/anime/anime-card';
 import { PlayCircle } from 'lucide-react';
+import { getFeaturedAnime, getPopularAnime, getTrendingAnime } from '@/lib/firebase/firestore';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-export default function Home() {
-  const featuredAnime = mockAnimeData[0];
+export default async function Home() {
+  const featuredAnime = await getFeaturedAnime();
+  const trendingAnime = await getTrendingAnime(6);
+  const popularAnime = await getPopularAnime(6);
+
+  if (!featuredAnime) {
+    // Handle case where no anime is available
+    return (
+      <div className="container text-center py-20">
+        <h2 className="text-2xl font-bold">No Anime Found</h2>
+        <p className="text-muted-foreground">Check back later for new content!</p>
+      </div>
+    );
+  }
+
   const heroImage = PlaceHolderImages.find(img => img.id === featuredAnime.heroImageId);
-  const trendingAnime = mockAnimeData.slice(1, 7);
-  const popularAnime = [...mockAnimeData].reverse().slice(0, 6);
 
   return (
     <div className="space-y-12">

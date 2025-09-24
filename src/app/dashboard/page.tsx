@@ -1,15 +1,19 @@
 import Image from 'next/image';
-import { mockAnimeData } from '@/lib/data';
+import { getAnimes } from '@/lib/firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimeCard } from '@/components/anime/anime-card';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const avatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
-  const watching = mockAnimeData.slice(0, 4);
-  const planToWatch = mockAnimeData.slice(2, 6);
-  const completed = mockAnimeData.slice(1, 3).reverse();
+  const animes = await getAnimes();
+  
+  // Note: This is still mock data for demonstration.
+  // In a real app, you'd fetch user-specific lists from Firestore.
+  const watching = animes.slice(0, 4);
+  const planToWatch = animes.slice(2, 6);
+  const completed = animes.slice(1, 3).reverse();
 
   return (
     <div className="container max-w-screen-xl py-8 md:py-12">

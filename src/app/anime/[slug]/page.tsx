@@ -2,20 +2,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Star, Calendar, Tv, Bookmark, Play } from 'lucide-react';
-import { mockAnimeData } from '@/lib/data';
+import { getAnimeBySlug, getAllAnimeSlugs } from '@/lib/firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 export async function generateStaticParams() {
-  return mockAnimeData.map((anime) => ({
-    slug: anime.slug,
+  const slugs = await getAllAnimeSlugs();
+  return slugs.map((slug) => ({
+    slug: slug,
   }));
 }
 
-export default function AnimeDetailPage({ params }: { params: { slug: string } }) {
-  const anime = mockAnimeData.find((a) => a.slug === params.slug);
+export default async function AnimeDetailPage({ params }: { params: { slug: string } }) {
+  const anime = await getAnimeBySlug(params.slug);
 
   if (!anime) {
     notFound();

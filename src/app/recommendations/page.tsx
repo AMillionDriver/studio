@@ -1,6 +1,9 @@
 import { RecommendationForm } from '@/components/recommendations/recommendation-form';
+import { getInitialRecommendationState } from '@/lib/actions';
 
-export default function RecommendationsPage() {
+export default async function RecommendationsPage() {
+  const initialState = await getInitialRecommendationState();
+
   return (
     <div className="container py-8 md:py-12">
       <div className="flex flex-col items-center justify-center text-center">
@@ -12,7 +15,7 @@ export default function RecommendationsPage() {
         </p>
       </div>
       <div className="mt-8 flex justify-center">
-        <RecommendationForm />
+        <RecommendationForm initialState={initialState} />
       </div>
     </div>
   );
