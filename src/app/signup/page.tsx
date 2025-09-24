@@ -15,11 +15,11 @@ import * as z from "zod";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
-export default function LoginPage() {
-  const { signInWithGoogle, signInWithEmail, loading } = useAuth();
+export default function SignUpPage() {
+  const { signInWithGoogle, signUpWithEmail, loading } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -30,7 +30,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    signInWithEmail(values.email, values.password);
+    signUpWithEmail(values.email, values.password);
   };
 
   return (
@@ -38,13 +38,13 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
             <Clapperboard className="h-12 w-12 mx-auto text-primary mb-2" />
-            <h1 className="text-3xl font-bold">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to access your account</p>
+            <h1 className="text-3xl font-bold">Create an Account</h1>
+            <p className="text-muted-foreground">Join AniStream today!</p>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Sign Up</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing In..." : "Sign In"}
+                  {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </Form>
@@ -99,15 +99,15 @@ export default function LoginPage() {
                 disabled={loading}
             >
                 <GoogleIcon className="mr-2 h-4 w-4" />
-                Sign in with Google
+                Sign up with Google
             </Button>
           </CardContent>
         </Card>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Sign Up
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+                Sign In
             </Link>
         </p>
       </div>

@@ -7,7 +7,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import Header from '@/components/layout/header';
-import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { AuthProvider } from '@/contexts/auth-context';
+import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
