@@ -1,7 +1,7 @@
 
 import { collection, getDocs, query, where, limit, orderBy, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { firestore } from './sdk';
-import type { Anime, AnimeSerializable } from '@/types/anime';
+import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
 
 /**
  * Fetches all anime documents from the 'animes' collection in Firestore,
@@ -57,6 +57,43 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
         return null;
     }
 }
+
+/**
+ * Fetches all episodes for a specific anime.
+ * @param animeId The ID of the anime.
+ * @returns A promise that resolves to an array of serializable episode objects.
+ */
+export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSerializable[]> {
+    try {
+        const episodesCollection = collection(firestore, 'animes', animeId, 'episodes');
+        const q = query(episodesCollection, orderBy('episodeNumber', 'asc'));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return [];
+        }
+
+        const episodes: EpisodeSerializable[] = querySnapshot.docs.map(doc => {
+             const data = doc.data() as Episode;
+             const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+             return {
+                 id: doc.id,
+                 animeId: data.animeId,
+                 episodeNumber: data.episodeNumber,
+                 title: data.title,
+                 videoUrl: data.videoUrl,
+                 createdAt: createdAt
+             };
+        });
+
+        return episodes;
+
+    } catch (error) {
+        console.error(`Error fetching episodes for anime ${animeId}:`, error);
+        return [];
+    }
+}
+
 
 /**
  * Converts a Firestore document snapshot to a serializable Anime object.

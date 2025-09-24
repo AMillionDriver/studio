@@ -124,8 +124,7 @@ export function AnimeList() {
                 </Button>
 
                 <Button variant="ghost" size="icon" asChild>
-                  {/* The button will eventually lead to a page like /admin-panel/add-episode/[animeId] */}
-                  <Link href="#">
+                  <Link href={`/admin-panel/add-episode/${anime.id}`}>
                       <Plus className="h-4 w-4 text-green-500" />
                       <span className="sr-only">Add Episode</span>
                   </Link>
