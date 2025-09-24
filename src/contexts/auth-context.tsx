@@ -11,6 +11,7 @@ import {
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInAnonymously as firebaseSignInAnonymously,
   AuthError
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
@@ -25,6 +26,7 @@ export interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signInAnonymously: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -72,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     router.push(redirectPath);
     toast({
       title: "Login Berhasil",
-      description: "Selamat datang kembali!",
+      description: "Selamat datang!",
     });
   };
 
@@ -127,6 +129,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInAnonymously = async () => {
+    setLoading(true);
+    try {
+      await firebaseSignInAnonymously(auth);
+      handleAuthSuccess();
+    } catch (error: any) {
+      handleAuthError(error);
+    }
+  };
+
 
   const signOut = async () => {
     try {
@@ -146,7 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail };
+  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously };
 
   return (
     <AuthContext.Provider value={value}>

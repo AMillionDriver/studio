@@ -19,7 +19,7 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithEmail, loading } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signInAnonymously, loading } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -92,15 +92,25 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={signInWithGoogle}
-                disabled={loading}
-            >
-                <GoogleIcon className="mr-2 h-4 w-4" />
-                Sign in with Google
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={signInWithGoogle}
+                  disabled={loading}
+              >
+                  <GoogleIcon className="mr-2 h-4 w-4" />
+                  Sign in with Google
+              </Button>
+              <Button 
+                  variant="secondary" 
+                  className="w-full"
+                  onClick={signInAnonymously}
+                  disabled={loading}
+              >
+                  Continue as Guest
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
