@@ -1,6 +1,7 @@
 
-import type { FieldValue } from 'firebase/firestore';
+import type { FieldValue, Timestamp } from 'firebase/firestore';
 
+// Type for data coming from/going to Firestore
 export interface Anime {
     id: string;
     title: string;
@@ -10,9 +11,16 @@ export interface Anime {
     genres: string[];
     rating?: number;
     episodes: number;
-    createdAt: FieldValue;
-    updatedAt: FieldValue;
+    createdAt: FieldValue | Timestamp;
+    updatedAt: FieldValue | Timestamp;
 }
+
+// Type for data used in client components (serializable)
+export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt'> {
+    createdAt: string;
+    updatedAt: string;
+}
+
 
 export interface AnimeFormData {
     title: string;
