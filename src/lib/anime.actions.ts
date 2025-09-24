@@ -1,13 +1,14 @@
 
 'use server';
 
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { firestore } from './firebase/sdk';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { adminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeFormData } from '@/types/anime';
 
+const firestore = getFirestore(adminApp);
 
 /**
- * Adds a new anime document to Firestore.
+ * Adds a new anime document to Firestore using the Admin SDK.
  * This is a Server Action and should only be called from the server-side.
  * @param formData The form data from the client.
  * @returns An object indicating success or failure.
@@ -41,8 +42,8 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
       genres: genres.split(',').map(g => g.trim()),
       rating: ratingNum,
       episodes: episodesNum,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
   } catch (error: any) {
@@ -52,17 +53,12 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
 
   // 2. Add the document to the 'animes' collection in Firestore
   try {
-    console.log('Attempting to add document with data:', animeData);
-    const docRef = await addDoc(collection(firestore, 'animes'), animeData);
+    console.log('Attempting to add document with data using Admin SDK:', animeData);
+    const docRef = await firestore.collection('animes').add(animeData);
     console.log('Document written with ID: ', docRef.id);
     return { success: true, docId: docRef.id };
   } catch (error: any) {
-    console.error('Error adding document to Firestore: ', error);
-    // This is a generic error message, but the new security rules might be the cause.
-    // The developer needs to check the Firestore rules and user's custom claims.
-    if (error.code === 'permission-denied') {
-        return { success: false, error: 'Permission denied. Make sure you are an admin and the Firestore security rules are configured correctly.' };
-    }
+    console.error('Error adding document to Firestore with Admin SDK: ', error);
     return { success: false, error: `Failed to save data to database: ${error.message}` };
   }
 }
