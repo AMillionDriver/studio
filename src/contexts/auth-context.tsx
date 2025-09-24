@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithGoogle = async () => {
     setLoading(true);
+    console.log("Attempting to sign in with Google...");
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -57,7 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await firebaseSignOut(auth);
       router.push('/login');
-    } catch (error: any) {
+    } catch (error: any)
+      {
       console.error("Error signing out", error);
        toast({
         title: "Logout Gagal",
