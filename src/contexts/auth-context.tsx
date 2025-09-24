@@ -12,6 +12,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously as firebaseSignInAnonymously,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
   AuthError
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
@@ -27,6 +30,8 @@ export interface AuthContextType {
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signInAnonymously: () => Promise<void>;
+  signInWithPhone: (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier) => Promise<ConfirmationResult | null>;
+  confirmPhoneCode: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -50,6 +55,10 @@ const formatAuthError = (errorCode: string): string => {
       return 'Email atau password salah. Silakan coba lagi.';
     case 'auth/too-many-requests':
       return 'Terlalu banyak percobaan login. Coba lagi nanti.';
+    case 'auth/invalid-phone-number':
+        return 'Nomor telepon tidak valid. Pastikan formatnya benar (misal: +6281234567890).';
+    case 'auth/invalid-verification-code':
+        return 'Kode verifikasi salah. Silakan coba lagi.';
     default:
       return 'Terjadi kesalahan otentikasi. Silakan coba lagi.';
   }
@@ -138,7 +147,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       handleAuthError(error);
     }
   };
+  
+  const signInWithPhone = async (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier): Promise<ConfirmationResult | null> => {
+    setLoading(true);
+    try {
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+      toast({ title: "Kode Verifikasi Terkirim", description: `Kami telah mengirimkan kode ke ${phoneNumber}` });
+      setLoading(false);
+      return confirmationResult;
+    } catch (error: any) {
+      handleAuthError(error);
+      // Ensure recaptcha is cleared if there's an error
+      recaptchaVerifier.clear();
+      return null;
+    }
+  };
 
+  const confirmPhoneCode = async (confirmationResult: ConfirmationResult, code: string) => {
+    setLoading(true);
+    try {
+      await confirmationResult.confirm(code);
+      handleAuthSuccess();
+    } catch (error: any) {
+      handleAuthError(error);
+    }
+  };
 
   const signOut = async () => {
     try {
@@ -158,7 +191,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously };
+  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, signInWithPhone, confirmPhoneCode };
 
   return (
     <AuthContext.Provider value={value}>
