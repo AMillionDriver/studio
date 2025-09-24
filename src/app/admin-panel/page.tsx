@@ -98,8 +98,8 @@ export default function AdminPanelPage() {
     } catch (error) {
         console.error(error);
         toast({
-            title: "Error",
-            description: "An unexpected client-side error occurred. Please check the console.",
+            title: "Client-side Error",
+            description: "An unexpected error occurred on the client. Please check the console.",
             variant: "destructive",
         });
     }
@@ -244,5 +244,3 @@ export default function AdminPanelPage() {
     </div>
   );
 }
-
-    
