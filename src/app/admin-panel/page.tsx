@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Clapperboard } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
-import type { AnimeFormData } from "@/types/anime";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
@@ -44,8 +43,8 @@ const animeFormSchema = z.object({
       ".jpg, .jpeg, .png, .webp and .gif files are accepted."
     ),
   genres: z.string().min(1, "At least one genre is required."),
-  rating: z.coerce.number().min(0).max(10).optional(),
-  episodes: z.coerce.number().int().min(1, "At least one episode is required."),
+  rating: z.string().optional(),
+  episodes: z.string().min(1, "At least one episode is required."),
 });
 
 type AnimeFormValues = z.infer<typeof animeFormSchema>;
@@ -59,8 +58,8 @@ export default function AdminPanelPage() {
       description: "",
       streamUrl: "",
       genres: "",
-      rating: undefined,
-      episodes: undefined,
+      rating: "",
+      episodes: "",
       coverImage: undefined,
     },
   });
@@ -68,17 +67,18 @@ export default function AdminPanelPage() {
   const coverImageRef = form.register("coverImage");
 
   const onSubmit = async (data: AnimeFormValues) => {
-    const coverImageFile = data.coverImage[0];
-
-    const formData: AnimeFormData = {
-        title: data.title,
-        description: data.description,
-        streamUrl: data.streamUrl,
-        genres: data.genres.split(',').map(g => g.trim()),
-        rating: data.rating,
-        episodes: data.episodes,
-        coverImage: coverImageFile,
-    };
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('streamUrl', data.streamUrl);
+    formData.append('genres', data.genres);
+    formData.append('episodes', data.episodes);
+    if (data.rating) {
+      formData.append('rating', data.rating);
+    }
+    if (data.coverImage && data.coverImage.length > 0) {
+      formData.append('coverImage', data.coverImage[0]);
+    }
     
     try {
         const result = await addAnime(formData);
@@ -213,7 +213,7 @@ export default function AdminPanelPage() {
                     <FormItem>
                         <FormLabel>Rating</FormLabel>
                         <FormControl>
-                        <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} value={field.value ?? ''} />
+                        <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -226,7 +226,7 @@ export default function AdminPanelPage() {
                     <FormItem>
                         <FormLabel>Episodes</FormLabel>
                         <FormControl>
-                        <Input type="number" min="1" placeholder="e.g., 24" {...field} value={field.value ?? ''} />
+                        <Input type="number" min="1" placeholder="e.g., 24" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

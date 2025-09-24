@@ -4,7 +4,7 @@
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { firestore, storage } from './firebase/sdk';
-import type { Anime, AnimeFormData } from '@/types/anime';
+import type { Anime } from '@/types/anime';
 
 /**
  * Uploads a file to Firebase Storage and returns the download URL.
@@ -22,24 +22,36 @@ async function uploadFile(file: File, path: string): Promise<string> {
 
 /**
  * Adds a new anime document to Firestore and uploads its cover image to Storage.
- * @param formData The anime data from the form.
+ * @param formData The form data from the client.
  * @returns An object indicating success or failure.
  */
-export async function addAnime(formData: AnimeFormData): Promise<{ success: boolean; docId?: string; error?: string }> {
+export async function addAnime(formData: FormData): Promise<{ success: boolean; docId?: string; error?: string }> {
   try {
+    const coverImage = formData.get('coverImage') as File;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const streamUrl = formData.get('streamUrl') as string;
+    const genres = formData.get('genres') as string;
+    const episodes = formData.get('episodes') as string;
+    const rating = formData.get('rating') as string | null;
+
+    if (!coverImage || !title || !description || !streamUrl || !genres || !episodes) {
+      return { success: false, error: 'Missing required fields.' };
+    }
+
     // 1. Upload Cover Image to Firebase Storage
-    const coverImagePath = `anime-covers/${Date.now()}_${formData.coverImage.name}`;
-    const coverImageUrl = await uploadFile(formData.coverImage, coverImagePath);
+    const coverImagePath = `anime-covers/${Date.now()}_${coverImage.name}`;
+    const coverImageUrl = await uploadFile(coverImage, coverImagePath);
 
     // 2. Prepare the data for Firestore
     const animeData: Omit<Anime, 'id'> = {
-      title: formData.title,
-      description: formData.description,
-      streamUrl: formData.streamUrl,
-      coverImageUrl: coverImageUrl,
-      genres: formData.genres,
-      rating: formData.rating ?? 0,
-      episodes: formData.episodes,
+      title,
+      description,
+      streamUrl,
+      coverImageUrl,
+      genres: genres.split(',').map(g => g.trim()),
+      rating: rating ? parseFloat(rating) : 0,
+      episodes: parseInt(episodes, 10),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
