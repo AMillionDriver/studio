@@ -6,6 +6,8 @@ import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Logo } from './logo';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '../ui/input';
+import { UserNav } from './user-nav';
+import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -16,6 +18,8 @@ const navLinks = [
 ];
 
 export default function Header() {
+  const { user, loading } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -81,12 +85,15 @@ export default function Header() {
             </DialogContent>
           </Dialog>
           <ThemeToggle />
-          <Button asChild variant="outline">
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup">Register</Link>
-          </Button>
+          {loading ? null : user ? (
+            <UserNav />
+          ) : (
+            <>
+              <Button asChild variant="outline">
+                <Link href="/login">Login</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
