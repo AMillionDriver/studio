@@ -12,6 +12,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously as firebaseSignInAnonymously,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   AuthError
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
@@ -27,6 +28,7 @@ export interface AuthContextType {
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signInAnonymously: () => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -142,6 +144,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       handleAuthError(error);
     }
   };
+
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      await firebaseSendPasswordResetEmail(auth, email);
+      toast({
+        title: "Email Reset Password Terkirim",
+        description: `Kami telah mengirimkan tautan untuk mengatur ulang kata sandi Anda ke ${email}.`,
+      });
+    } catch (error: any) {
+       toast({
+        title: "Gagal Mengirim Email",
+        description: formatAuthError(error.code),
+        variant: "destructive",
+      });
+    }
+  }
   
 
   const signOut = async () => {
@@ -162,7 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously };
+  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, sendPasswordResetEmail };
 
   return (
     <AuthContext.Provider value={value}>
