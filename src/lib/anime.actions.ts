@@ -26,8 +26,8 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
     const episodesNum = parseInt(episodes, 10);
     const ratingNum = rating ? parseFloat(rating) : 0;
 
-    if (isNaN(episodesNum)) {
-        return { success: false, error: 'Invalid number for episodes.' };
+    if (isNaN(episodesNum) || episodesNum <= 0) {
+        return { success: false, error: 'Invalid number for episodes. Must be a positive number.' };
     }
     if (rating && isNaN(ratingNum)) {
         return { success: false, error: 'Invalid number for rating.' };
@@ -57,6 +57,11 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
     return { success: true, docId: docRef.id };
   } catch (error: any) {
     console.error('Error adding document to Firestore: ', error);
+    // This is a generic error message, but the new security rules might be the cause.
+    // The developer needs to check the Firestore rules and user's custom claims.
+    if (error.code === 'permission-denied') {
+        return { success: false, error: 'Permission denied. Make sure you are an admin and the Firestore security rules are configured correctly.' };
+    }
     return { success: false, error: `Failed to save data to database: ${error.message}` };
   }
 }
