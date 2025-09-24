@@ -27,12 +27,12 @@ async function uploadFile(file: File, path: string): Promise<string> {
  */
 export async function addAnime(formData: FormData): Promise<{ success: boolean; docId?: string; error?: string }> {
   try {
-    const coverImage = formData.get('coverImage') as File;
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const streamUrl = formData.get('streamUrl') as string;
-    const genres = formData.get('genres') as string;
-    const episodes = formData.get('episodes') as string;
+    const coverImage = formData.get('coverImage') as File | null;
+    const title = formData.get('title') as string | null;
+    const description = formData.get('description') as string | null;
+    const streamUrl = formData.get('streamUrl') as string | null;
+    const genres = formData.get('genres') as string | null;
+    const episodes = formData.get('episodes') as string | null;
     const rating = formData.get('rating') as string | null;
 
     if (!coverImage || !title || !description || !streamUrl || !genres || !episodes) {
@@ -68,3 +68,5 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
     return { success: false, error: `Failed to add anime: ${errorMessage}` };
   }
 }
+
+    
