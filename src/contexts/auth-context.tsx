@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 const auth = getAuth(app);
 
@@ -24,6 +25,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -39,11 +41,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await signInWithPopup(auth, provider);
       router.push('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with Google", error);
-      // Di sini Anda bisa menambahkan notifikasi error untuk pengguna, misalnya dengan toast
+      toast({
+        title: "Login Gagal",
+        description: `Terjadi kesalahan: ${error.message}`,
+        variant: "destructive",
+      });
     } finally {
-      // setLoading(false) tidak diperlukan di sini karena onAuthStateChanged akan menanganinya
+      // setLoading(false) is not strictly necessary here because onAuthStateChanged will handle it,
+      // but it can be useful if the auth state change doesn't propagate immediately.
+      // We'll let onAuthStateChanged handle it to avoid potential race conditions.
     }
   };
 
@@ -51,8 +59,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await firebaseSignOut(auth);
       router.push('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing out", error);
+       toast({
+        title: "Logout Gagal",
+        description: `Terjadi kesalahan: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
