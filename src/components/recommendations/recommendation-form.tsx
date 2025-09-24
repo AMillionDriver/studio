@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { WandSparkles, Loader, ServerCrash, Star } from 'lucide-react';
 import { getRecommendations, type RecommendationState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ type RecommendationFormProps = {
 }
 
 export function RecommendationForm({ initialState }: RecommendationFormProps) {
-  const [state, formAction] = useFormState(getRecommendations, initialState);
+  const [state, formAction] = useActionState(getRecommendations, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
