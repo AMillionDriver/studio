@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import * as z from "zod";
 
 import { getAnimeById } from "@/lib/firebase/firestore";
 import { updateAnime } from "@/lib/anime.actions";
-import type { AnimeSerializable, AnimeUpdateFormData } from "@/types/anime";
+import type { AnimeUpdateFormData } from "@/types/anime";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,7 @@ export default function EditAnimePage({ params }: EditPageProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { id } = params;
+  const [loading, setLoading] = useState(true);
 
   const form = useForm<AnimeUpdateFormData>({
     resolver: zodResolver(editFormSchema),
@@ -50,19 +51,31 @@ export default function EditAnimePage({ params }: EditPageProps) {
   useEffect(() => {
     if (!id) return;
     const fetchAnime = async () => {
-      const anime = await getAnimeById(id);
-      if (!anime) {
-        return notFound();
+      try {
+        setLoading(true);
+        const anime = await getAnimeById(id);
+        if (!anime) {
+          return notFound();
+        }
+        form.reset({
+          title: anime.title,
+          description: anime.description,
+          coverImageUrl: anime.coverImageUrl,
+        });
+      } catch (error) {
+        console.error("Failed to fetch anime", error);
+        toast({
+          title: "Error",
+          description: "Could not load anime data.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      form.reset({
-        title: anime.title,
-        description: anime.description,
-        coverImageUrl: anime.coverImageUrl,
-      });
     };
 
     fetchAnime();
-  }, [id, form]);
+  }, [id, form, toast]);
 
   const onSubmit = async (data: AnimeUpdateFormData) => {
     const result = await updateAnime(id, data);
@@ -83,7 +96,7 @@ export default function EditAnimePage({ params }: EditPageProps) {
 
   const { isSubmitting, isDirty, isValid } = form.formState;
 
-  if (!form.getValues().title) {
+  if (loading) {
     return (
         <div className="container mx-auto py-10 px-4 md:px-6">
             <Card className="max-w-2xl mx-auto">
