@@ -1,55 +1,66 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // --- FUNGSI BANTUAN OTENTIKASI ---
     function isAuthenticated() {
       return request.auth != null;
     }
 
     function isAdmin() {
-      // Check for the custom claim 'admin' on the user's token.
       return isAuthenticated() && request.auth.token.admin == true;
     }
-    
-    // Validation function for new anime data
-    function isNewAnimeDataValid() {
-        let data = request.resource.data;
-        return data.title is string && data.title.size() > 0 &&
-               data.description is string && data.description.size() > 0 &&
-               data.streamUrl is string && data.streamUrl.matches('https?://.+') &&
-               data.coverImageUrl is string && data.coverImageUrl.matches('https?://.+') &&
-               data.genres is list && data.genres.size() > 0 &&
-               data.episodes is number && data.episodes > 0 &&
-               (!('rating' in data) || data.rating is number) &&
-               request.resource.data.createdAt is timestamp &&
-               request.resource.data.updatedAt is timestamp;
-    }
-    
-    // Validation function for updated anime data
-    function isUpdatedAnimeDataValid() {
-        let data = request.resource.data;
-        return (!('title' in data) || (data.title is string && data.title.size() > 0)) &&
-               (!('description' in data) || (data.description is string && data.description.size() > 0)) &&
-               (!('streamUrl' in data) || (data.streamUrl is string && data.streamUrl.matches('https?://.+'))) &&
-               (!('coverImageUrl' in data) || (data.coverImageUrl is string && data.coverImageUrl.matches('https?://.+'))) &&
-               (!('genres' in data) || (data.genres is list && data.genres.size() > 0)) &&
-               (!('episodes' in data) || (data.episodes is number && data.episodes > 0)) &&
-               (!('rating' in data) || data.rating is number) &&
-               data.updatedAt == request.time;
+
+    // --- FUNGSI VALIDASI DATA ANIME ---
+    function isValidAnimeData(data) {
+      return data.title is string && data.title.size() > 0 &&
+             data.description is string && data.description.size() > 0 &&
+             data.streamUrl is string && data.streamUrl.matches('https?://.+') &&
+             data.coverImageUrl is string && data.coverImageUrl.matches('https?://.+') &&
+             data.genres is list && data.genres.size() > 0 &&
+             data.episodes is number &&
+             (!('rating' in data) || data.rating is number);
     }
 
-    // Rules for the 'animes' collection
+    // --- FUNGSI VALIDASI DATA EPISODE ---
+    function isValidEpisodeData(data) {
+      return data.animeId is string && data.animeId.size() > 0 &&
+             data.episodeNumber is number && data.episodeNumber > 0 &&
+             data.title is string && data.title.size() > 0 &&
+             data.videoUrl is string && data.videoUrl.matches('https?://.+');
+    }
+    
+    // --- ATURAN UNTUK KOLEKSI 'ANIMES' ---
     match /animes/{animeId} {
-      // ANYONE can read the list of animes or a single anime document.
+      
       allow read: if true;
 
-      // ONLY ADMINS can create, update, or delete anime documents.
-      allow create: if isAdmin() && isNewAnimeDataValid();
-      allow update: if isAdmin() && isUpdatedAnimeDataValid();
+      allow create: if isAdmin() && isValidAnimeData(request.resource.data)
+                      && request.resource.data.createdAt == request.time
+                      && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin() && isValidAnimeData(request.resource.data)
+                      && request.resource.data.updatedAt == request.time
+                      && request.resource.data.createdAt == resource.data.createdAt;
+
       allow delete: if isAdmin();
+
+      // --- ATURAN UNTUK SUB-KOLEKSI 'EPISODES' ---
+      match /episodes/{episodeId} {
+
+        // Siapa saja boleh membaca daftar episode.
+        allow read: if true;
+
+        // Hanya admin yang bisa membuat episode baru.
+        allow create: if isAdmin() && isValidEpisodeData(request.resource.data)
+                        && request.resource.data.createdAt == request.time
+                        // Pastikan episode yang dibuat sesuai dengan anime induknya
+                        && request.resource.data.animeId == animeId;
+        
+        // Hanya admin yang bisa mengubah atau menghapus.
+        allow update, delete: if isAdmin();
+      }
     }
   }
 }
