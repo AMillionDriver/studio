@@ -1,7 +1,6 @@
 'use server';
 
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -31,6 +30,8 @@ export async function signUpWithEmail(
 
   try {
     await createUserWithEmailAndPassword(auth, result.data.email, result.data.password);
+    // Also sign in the user right after they sign up
+    await signInWithEmailAndPassword(auth, result.data.email, result.data.password);
     return { success: true };
   } catch (e: any) {
     return { error: e.message };
