@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Plus } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -120,6 +120,14 @@ export function AnimeList() {
                   <Link href={`/admin-panel/edit/${anime.id}`}>
                     <Edit className="h-4 w-4 text-muted-foreground" />
                     <span className="sr-only">Edit</span>
+                  </Link>
+                </Button>
+
+                <Button variant="ghost" size="icon" asChild>
+                  {/* The button will eventually lead to a page like /admin-panel/add-episode/[animeId] */}
+                  <Link href="#">
+                      <Plus className="h-4 w-4 text-green-500" />
+                      <span className="sr-only">Add Episode</span>
                   </Link>
                 </Button>
 
