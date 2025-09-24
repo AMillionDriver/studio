@@ -36,8 +36,8 @@ const editFormSchema = z.object({
 export default function EditAnimePage({ params }: EditPageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { id } = params;
   const [loading, setLoading] = useState(true);
+  const [initialTitle, setInitialTitle] = useState("");
 
   const form = useForm<AnimeUpdateFormData>({
     resolver: zodResolver(editFormSchema),
@@ -49,7 +49,13 @@ export default function EditAnimePage({ params }: EditPageProps) {
   });
 
   useEffect(() => {
-    if (!id) return;
+    const { id } = params;
+    if (!id) {
+        setLoading(false);
+        notFound();
+        return;
+    };
+
     const fetchAnime = async () => {
       try {
         setLoading(true);
@@ -62,6 +68,7 @@ export default function EditAnimePage({ params }: EditPageProps) {
           description: anime.description,
           coverImageUrl: anime.coverImageUrl,
         });
+        setInitialTitle(anime.title);
       } catch (error) {
         console.error("Failed to fetch anime", error);
         toast({
@@ -75,9 +82,10 @@ export default function EditAnimePage({ params }: EditPageProps) {
     };
 
     fetchAnime();
-  }, [id, form, toast]);
+  }, [params, form, toast]);
 
   const onSubmit = async (data: AnimeUpdateFormData) => {
+    const { id } = params;
     const result = await updateAnime(id, data);
     if (result.success) {
       toast({
@@ -126,7 +134,7 @@ export default function EditAnimePage({ params }: EditPageProps) {
                     <CardTitle className="text-2xl">Edit Anime</CardTitle>
                 </div>
                 <CardDescription>
-                  Update the details for &quot;{form.getValues().title}&quot;.
+                  Update the details for &quot;{initialTitle}&quot;.
                 </CardDescription>
               </div>
               <Link href="/admin-panel" passHref>
