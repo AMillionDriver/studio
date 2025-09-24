@@ -64,10 +64,9 @@ export default function SignupPage() {
     } else {
        toast({
         title: 'Sign Up Successful',
-        description: "Welcome! You're now logged in.",
+        description: "Welcome! You're now being redirected.",
       });
       router.push('/dashboard');
-      router.refresh(); // Refresh to update auth state in header
     }
   };
 
@@ -93,7 +92,11 @@ export default function SignupPage() {
                   <FormItem className="grid gap-2">
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="AniFan123" {...field} />
+                      <Input 
+                        placeholder="AniFan123" 
+                        {...field} 
+                        disabled={form.formState.isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,6 +113,7 @@ export default function SignupPage() {
                         type="email"
                         placeholder="m@example.com"
                         {...field}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -123,7 +127,11 @@ export default function SignupPage() {
                   <FormItem className="grid gap-2">
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password" 
+                        {...field} 
+                        disabled={form.formState.isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -136,7 +144,11 @@ export default function SignupPage() {
                   <FormItem className="grid gap-2">
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password" 
+                        {...field} 
+                        disabled={form.formState.isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

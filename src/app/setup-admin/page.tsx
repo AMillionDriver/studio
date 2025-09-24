@@ -27,7 +27,18 @@ export default function SetupAdminPage() {
     setIsLoading(true);
     const result = await signUpWithEmail({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
     
-    if (result.error && !result.error.includes('auth/email-already-in-use')) {
+    // The account already exists, which is fine. Treat it as a success for setup.
+    if (result.error && result.error.includes('already registered')) {
+       toast({
+        title: 'Admin Account Ready',
+        description: 'The admin account already exists. You can log in.',
+      });
+      setIsCreated(true);
+      setTimeout(() => router.push('/login'), 2000);
+      return;
+    }
+
+    if (result.error) {
       toast({
         variant: 'destructive',
         title: 'Admin Creation Failed',
@@ -36,7 +47,7 @@ export default function SetupAdminPage() {
       setIsLoading(false);
     } else {
       toast({
-        title: 'Admin Account Ready',
+        title: 'Admin Account Created',
         description: 'The admin account is set up. You can now log in.',
       });
       setIsCreated(true);
@@ -67,7 +78,7 @@ export default function SetupAdminPage() {
                   <Loader className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
-              ) : isCreated ? 'Account Created!' : 'Create Admin Account'}
+              ) : isCreated ? 'Account Ready!' : 'Create Admin Account'}
             </Button>
             {isCreated && (
                 <p className="text-sm text-center text-muted-foreground">
@@ -75,7 +86,7 @@ export default function SetupAdminPage() {
                 </p>
             )}
             <p className="text-xs text-center text-muted-foreground pt-4">
-              Click the button above to create the admin account with the credentials specified. If the account already exists, this will simply confirm it's ready.
+              Click the button above to create an admin account. If the account already exists, this will simply confirm it's ready for login.
             </p>
           </div>
         </CardContent>

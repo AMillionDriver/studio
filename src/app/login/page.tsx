@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,7 +28,7 @@ import { useRouter } from 'next/navigation';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -65,7 +64,6 @@ export default function LoginPage() {
       } else {
         router.push('/dashboard');
       }
-      router.refresh(); // Refresh to update auth state in header
     }
   };
 
@@ -95,6 +93,7 @@ export default function LoginPage() {
                         type="email"
                         placeholder="m@example.com"
                         {...field}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -116,7 +115,11 @@ export default function LoginPage() {
                         </Link>
                       </div>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password"
+                        {...field} 
+                        disabled={form.formState.isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
