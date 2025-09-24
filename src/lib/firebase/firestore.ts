@@ -96,6 +96,41 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
 
 
 /**
+ * Fetches a single episode by its ID from an anime's subcollection.
+ * @param animeId The ID of the parent anime.
+ * @param episodeId The ID of the episode to fetch.
+ * @returns A promise that resolves to a serializable episode object or null.
+ */
+export async function getEpisodeById(animeId: string, episodeId: string): Promise<EpisodeSerializable | null> {
+    try {
+        const episodeRef = doc(firestore, 'animes', animeId, 'episodes', episodeId);
+        const docSnap = await getDoc(episodeRef);
+
+        if (!docSnap.exists()) {
+            console.log(`Episode with ID ${episodeId} not found in anime ${animeId}`);
+            return null;
+        }
+
+        const data = docSnap.data() as Episode;
+        const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+        
+        return {
+            id: docSnap.id,
+            animeId: data.animeId,
+            episodeNumber: data.episodeNumber,
+            title: data.title,
+            videoUrl: data.videoUrl,
+            createdAt: createdAt,
+        };
+
+    } catch (error) {
+        console.error(`Error fetching episode ${episodeId} for anime ${animeId}: `, error);
+        return null;
+    }
+}
+
+
+/**
  * Converts a Firestore document snapshot to a serializable Anime object.
  * @param doc The document snapshot to convert.
  * @returns A serializable Anime object.

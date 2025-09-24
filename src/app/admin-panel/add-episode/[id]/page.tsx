@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 import { getAnimeById, getEpisodesForAnime } from '@/lib/firebase/firestore';
 import type { AnimeSerializable, EpisodeFormData, EpisodeSerializable } from '@/types/anime';
-import { addEpisodeToAnime } from '@/lib/episode.actions';
+import { addEpisodeToAnime, deleteEpisode } from '@/lib/episode.actions';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const episodeFormSchema = z.object({
   episodeNumber: z.string().min(1, 'Episode number is required.'),
@@ -94,6 +95,27 @@ export default function AddEpisodePage() {
       form.setValue('episodeNumber', (updatedEpisodes.length + 1).toString());
     } else {
       toast({ title: 'Error', description: result.error || 'Failed to add episode.', variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async (episodeId: string) => {
+    if (!animeId) return;
+    const result = await deleteEpisode(animeId, episodeId);
+
+    if (result.success) {
+        toast({
+            title: 'Episode Deleted',
+            description: 'The episode has been successfully removed.',
+        });
+        const updatedEpisodes = await getEpisodesForAnime(animeId);
+        setEpisodes(updatedEpisodes);
+        form.setValue('episodeNumber', (updatedEpisodes.length + 1).toString());
+    } else {
+        toast({
+            title: 'Error',
+            description: result.error || 'Failed to delete the episode.',
+            variant: 'destructive',
+        });
     }
   };
 
@@ -214,8 +236,35 @@ export default function AddEpisodePage() {
                                     <TableCell>{ep.title}</TableCell>
                                     <TableCell>{format(new Date(ep.createdAt), 'dd MMM yyyy')}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" disabled><Edit className="h-4 w-4"/></Button>
-                                        <Button variant="ghost" size="icon" disabled><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                      <Button variant="ghost" size="icon" asChild>
+                                        <Link href={`/admin-panel/edit-episode/${animeId}/${ep.id}`}>
+                                            <Edit className="h-4 w-4"/>
+                                        </Link>
+                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <Trash2 className="h-4 w-4 text-destructive"/>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete episode {ep.episodeNumber}: &quot;{ep.title}&quot;.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => handleDelete(ep.id)}
+                                                    className="bg-destructive hover:bg-destructive/90"
+                                                >
+                                                    Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
                                     </TableCell>
                                 </TableRow>
                             ))}

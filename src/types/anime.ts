@@ -61,3 +61,8 @@ export interface AnimeUpdateFormData {
     description: string;
     coverImageUrl: string;
 }
+
+export interface EpisodeUpdateFormData {
+    title: string;
+    videoUrl: string;
+}

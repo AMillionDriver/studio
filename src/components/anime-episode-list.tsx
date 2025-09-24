@@ -9,6 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { format } from 'date-fns';
+import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { deleteEpisode } from '@/lib/episode.actions';
 
 interface AnimeEpisodeListProps {
   animeId: string;
@@ -18,6 +22,7 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
   const [episodes, setEpisodes] = useState<EpisodeSerializable[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!animeId) return;
@@ -38,6 +43,23 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
 
     fetchEpisodes();
   }, [animeId]);
+
+  const handleDelete = async (episodeId: string) => {
+    const result = await deleteEpisode(animeId, episodeId);
+    if (result.success) {
+        toast({
+            title: 'Episode Deleted',
+            description: 'The episode has been successfully removed.',
+        });
+        setEpisodes(prev => prev.filter(ep => ep.id !== episodeId));
+    } else {
+        toast({
+            title: 'Error',
+            description: result.error || 'Failed to delete the episode.',
+            variant: 'destructive',
+        });
+    }
+  };
 
   if (loading) {
     return (
@@ -76,14 +98,37 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
                 <TableCell>{ep.title}</TableCell>
                 <TableCell>{format(new Date(ep.createdAt), 'dd MMM yyyy')}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" disabled>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit Episode</span>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin-panel/edit-episode/${animeId}/${ep.id}`}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit Episode</span>
+                    </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" disabled>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Delete Episode</span>
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <span className="sr-only">Delete Episode</span>
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete episode {ep.episodeNumber}: &quot;{ep.title}&quot;.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => handleDelete(ep.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
@@ -93,4 +138,3 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
     </div>
   );
 }
-
