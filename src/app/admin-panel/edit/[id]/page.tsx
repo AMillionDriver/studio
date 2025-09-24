@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -48,9 +48,10 @@ export default function EditAnimePage({ params }: EditPageProps) {
     },
   });
 
+  const animeId = typeof params.id === 'string' ? params.id : '';
+
   useEffect(() => {
-    const { id } = params;
-    if (!id) {
+    if (!animeId) {
         setLoading(false);
         notFound();
         return;
@@ -59,7 +60,7 @@ export default function EditAnimePage({ params }: EditPageProps) {
     const fetchAnime = async () => {
       try {
         setLoading(true);
-        const anime = await getAnimeById(id);
+        const anime = await getAnimeById(animeId);
         if (!anime) {
           return notFound();
         }
@@ -82,11 +83,10 @@ export default function EditAnimePage({ params }: EditPageProps) {
     };
 
     fetchAnime();
-  }, [params, form, toast]);
+  }, [animeId, form, toast]);
 
   const onSubmit = async (data: AnimeUpdateFormData) => {
-    const { id } = params;
-    const result = await updateAnime(id, data);
+    const result = await updateAnime(animeId, data);
     if (result.success) {
       toast({
         title: "Update Successful",
