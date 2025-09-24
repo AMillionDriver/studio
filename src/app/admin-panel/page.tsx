@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Clapperboard, UserPlus, Calendar as CalendarIcon } from "lucide-react";
+import { Clapperboard, UserPlus, Calendar as CalendarIcon, History } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
 import type { AnimeFormData } from "@/types/anime";
 import Link from "next/link";
@@ -303,8 +303,29 @@ export default function AdminPanelPage() {
              </Link>
           </CardContent>
         </Card>
+
+        <Separator />
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <History className="h-6 w-6 text-primary" />
+                    Activity History &amp; Logs
+                </CardTitle>
+                <CardDescription>
+                    Review recent activities and logs on the platform.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-lg p-6 h-64 overflow-y-auto bg-muted/20">
+                    <p className="text-sm text-center text-muted-foreground">
+                        No recent activity to display.
+                    </p>
+                    {/* Activity items will be dynamically added here in the future */}
+                </div>
+            </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
-
