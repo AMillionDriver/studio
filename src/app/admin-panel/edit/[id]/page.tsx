@@ -21,19 +21,14 @@ import { Edit, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-interface EditPageProps {
-  params: {
-    id: string;
-  };
-}
-
 const editFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   coverImageUrl: z.string().url("Please enter a valid image URL."),
 });
 
-export default function EditAnimePage({ params }: EditPageProps) {
+export default function EditAnimePage() {
+  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
