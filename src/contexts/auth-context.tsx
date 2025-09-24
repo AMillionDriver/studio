@@ -34,12 +34,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signInWithGoogle = async () => {
+    setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
       router.push('/');
     } catch (error) {
       console.error("Error signing in with Google", error);
+      // Di sini Anda bisa menambahkan notifikasi error untuk pengguna, misalnya dengan toast
+    } finally {
+      // setLoading(false) tidak diperlukan di sini karena onAuthStateChanged akan menanganinya
     }
   };
 
@@ -56,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
