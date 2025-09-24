@@ -26,62 +26,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Clapperboard } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+import type { AnimeFormData } from "@/types/anime";
 
 const animeFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   streamUrl: z.string().url("Please enter a valid URL."),
-  coverImage: z
-    .any()
-    .refine((files) => files?.length > 0, "Cover image is required.")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      ".jpg, .jpeg, .png, .webp and .gif files are accepted."
-    ),
+  coverImageUrl: z.string().url("Please enter a valid image URL."),
   genres: z.string().min(1, "At least one genre is required."),
   rating: z.string().optional(),
   episodes: z.string().min(1, "At least one episode is required."),
 });
 
-type AnimeFormValues = z.infer<typeof animeFormSchema>;
 
 export default function AdminPanelPage() {
   const { toast } = useToast();
-  const form = useForm<AnimeFormValues>({
+  const form = useForm<AnimeFormData>({
     resolver: zodResolver(animeFormSchema),
     defaultValues: {
       title: "",
       description: "",
       streamUrl: "",
+      coverImageUrl: "",
       genres: "",
       rating: "",
       episodes: "",
-      coverImage: undefined,
     },
   });
 
-  const coverImageRef = form.register("coverImage");
-
-  const onSubmit = async (data: AnimeFormValues) => {
-    const formData = new FormData();
-    formData.append('title', data.title);
-    formData.append('description', data.description);
-    formData.append('streamUrl', data.streamUrl);
-    formData.append('genres', data.genres);
-    formData.append('episodes', data.episodes);
-    if (data.rating) {
-      formData.append('rating', data.rating);
-    }
-    if (data.coverImage && data.coverImage.length > 0) {
-      formData.append('coverImage', data.coverImage[0]);
-    }
-    
+  const onSubmit = async (data: AnimeFormData) => {
     try {
-        const result = await addAnime(formData);
+        const result = await addAnime(data);
         if (result.success) {
             toast({
                 title: "Success!",
@@ -173,15 +148,15 @@ export default function AdminPanelPage() {
                 />
                 <FormField
                     control={form.control}
-                    name="coverImage"
+                    name="coverImageUrl"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Cover Image</FormLabel>
+                        <FormLabel>Cover Image URL</FormLabel>
                         <FormControl>
-                           <Input type="file" accept={ACCEPTED_IMAGE_TYPES.join(",")} {...coverImageRef} />
+                           <Input placeholder="https://example.com/image.jpg" {...field} />
                         </FormControl>
                          <FormDescription>
-                            Upload the anime's poster/cover image.
+                            URL for the anime's poster/cover image.
                         </FormDescription>
                         <FormMessage />
                     </FormItem>

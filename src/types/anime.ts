@@ -18,8 +18,8 @@ export interface AnimeFormData {
     title: string;
     description: string;
     streamUrl: string;
+    coverImageUrl: string;
     genres: string;
     rating?: string;
     episodes: string;
-    coverImage: any;
 }
