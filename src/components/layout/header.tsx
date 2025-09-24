@@ -90,11 +90,9 @@ export default function Header() {
           {loading ? null : user ? (
             <UserNav />
           ) : (
-            <>
-              <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
-            </>
+            <Button asChild variant="outline">
+              <Link href="/login">Login</Link>
+            </Button>
           )}
         </div>
       </div>
