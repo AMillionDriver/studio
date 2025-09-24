@@ -12,9 +12,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously as firebaseSignInAnonymously,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
   AuthError
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
@@ -30,8 +27,6 @@ export interface AuthContextType {
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signInAnonymously: () => Promise<void>;
-  signInWithPhone: (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier) => Promise<ConfirmationResult | null>;
-  confirmPhoneCode: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -148,30 +143,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   
-  const signInWithPhone = async (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier): Promise<ConfirmationResult | null> => {
-    setLoading(true);
-    try {
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-      toast({ title: "Kode Verifikasi Terkirim", description: `Kami telah mengirimkan kode ke ${phoneNumber}` });
-      setLoading(false);
-      return confirmationResult;
-    } catch (error: any) {
-      handleAuthError(error);
-      // Ensure recaptcha is cleared if there's an error
-      recaptchaVerifier.clear();
-      return null;
-    }
-  };
-
-  const confirmPhoneCode = async (confirmationResult: ConfirmationResult, code: string) => {
-    setLoading(true);
-    try {
-      await confirmationResult.confirm(code);
-      handleAuthSuccess();
-    } catch (error: any) {
-      handleAuthError(error);
-    }
-  };
 
   const signOut = async () => {
     try {
@@ -191,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously, signInWithPhone, confirmPhoneCode };
+  const value = { user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, signInAnonymously };
 
   return (
     <AuthContext.Provider value={value}>
