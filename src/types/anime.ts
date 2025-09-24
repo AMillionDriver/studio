@@ -34,3 +34,9 @@ export interface AnimeFormData {
     episodes: string;
     releaseDate?: Date;
 }
+
+export interface AnimeUpdateFormData {
+    title: string;
+    description: string;
+    coverImageUrl: string;
+}

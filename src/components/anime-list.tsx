@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ import {
 import { deleteAnime } from "@/lib/anime.actions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
+import Link from "next/link";
 
 export function AnimeList() {
   const [animes, setAnimes] = useState<AnimeSerializable[]>([]);
@@ -51,7 +52,7 @@ export function AnimeList() {
       }
     };
     fetchAnimes();
-  }, [toast]); // Dependency on toast to allow re-fetching after an action
+  }, []); 
 
   const handleDelete = async (animeId: string, animeTitle: string) => {
     const result = await deleteAnime(animeId);
@@ -114,7 +115,13 @@ export function AnimeList() {
                 </div>
               </TableCell>
               <TableCell className="text-center">{anime.episodes}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right space-x-1">
+                <Link href={`/admin-panel/edit/${anime.id}`} passHref>
+                    <Button variant="ghost" size="icon" asChild>
+                        <a><Edit className="h-4 w-4 text-muted-foreground" /></a>
+                    </Button>
+                </Link>
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon">
