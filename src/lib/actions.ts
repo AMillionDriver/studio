@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { personalizedAnimeRecommendations } from '@/ai/flows/personalized-anime-recommendations';
 import { getAnimes } from './firebase/firestore';
 import { seedDatabase } from './firebase/seed';
+import { signUpWithEmail } from './firebase/actions';
 
 const recommendationSchema = z.object({
   viewingHistory: z.string().min(1, 'Please enter at least one anime title.'),
@@ -86,4 +87,31 @@ export async function seedInitialData() {
   } catch (error: any) {
     return { success: false, message: error.message };
   }
+}
+
+// Admin Creation Action
+const ADMIN_EMAIL = 'nanangnurmansah5@gmail.com';
+const ADMIN_PASSWORD = 'admin123';
+
+export type AdminCreationState = {
+  status: 'idle' | 'loading' | 'success' | 'error' | 'already_exists';
+  message: string;
+}
+
+export async function createAdminAccount(
+  prevState: AdminCreationState,
+  formData: FormData
+): Promise<AdminCreationState> {
+  
+    const result = await signUpWithEmail({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+
+    if (result.success) {
+        return { status: 'success', message: 'Admin account created successfully! Redirecting...' };
+    }
+
+    if (result.error && result.error.includes('already registered')) {
+        return { status: 'already_exists', message: 'Admin account already exists. Redirecting...' };
+    }
+
+    return { status: 'error', message: result.error || 'An unknown error occurred.' };
 }
