@@ -57,6 +57,8 @@ export default function AdminPanelPage() {
       description: "",
       streamUrl: "",
       genres: "",
+      rating: undefined,
+      episodes: undefined,
     },
   });
 
@@ -197,7 +199,7 @@ export default function AdminPanelPage() {
                     <FormItem>
                         <FormLabel>Rating</FormLabel>
                         <FormControl>
-                        <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} />
+                        <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -210,7 +212,7 @@ export default function AdminPanelPage() {
                     <FormItem>
                         <FormLabel>Episodes</FormLabel>
                         <FormControl>
-                        <Input type="number" min="1" placeholder="e.g., 24" {...field} />
+                        <Input type="number" min="1" placeholder="e.g., 24" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
