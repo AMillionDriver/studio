@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
@@ -48,10 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         description: `Terjadi kesalahan: ${error.message}`,
         variant: "destructive",
       });
-    } finally {
-      // setLoading(false) is not strictly necessary here because onAuthStateChanged will handle it,
-      // but it can be useful if the auth state change doesn't propagate immediately.
-      // We'll let onAuthStateChanged handle it to avoid potential race conditions.
+       setLoading(false);
     }
   };
 
@@ -77,3 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+

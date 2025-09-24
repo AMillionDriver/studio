@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -20,7 +21,7 @@ const navLinks = [
 ];
 
 export default function Header() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -87,7 +88,7 @@ export default function Header() {
             </DialogContent>
           </Dialog>
           <ThemeToggle />
-          {loading ? null : user ? (
+          {user ? (
             <UserNav />
           ) : (
             <Button asChild variant="outline">
