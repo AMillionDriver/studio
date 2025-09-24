@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const idTokenResult = await getIdTokenResult(firebaseUser);
+        const idTokenResult = await getIdTokenResult(firebaseUser, true); // Force refresh the token
         let isAdmin = idTokenResult.claims.admin === true;
 
         // Hardcoded check for SUPER ADMIN
