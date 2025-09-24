@@ -26,6 +26,8 @@ import {
 import { signInWithEmail } from '@/lib/firebase/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase/sdk';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -33,6 +35,8 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+const ADMIN_EMAIL = 'nanangnurmansah5@gmail.com';
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -58,7 +62,11 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: "Welcome back!",
       });
-      router.push('/dashboard');
+      if (data.email === ADMIN_EMAIL) {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     }
   };
 

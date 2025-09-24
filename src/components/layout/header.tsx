@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clapperboard, Search, UserCircle, LogOut } from 'lucide-react';
+import { Clapperboard, Search, UserCircle, LogOut, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ const navLinks = [
   { href: '/recommendations', label: 'Recommendations' },
 ];
 
+const ADMIN_EMAIL = 'nanangnurmansah5@gmail.com';
+
 export function Header() {
   const { user } = useAuth();
   const router = useRouter();
@@ -46,6 +48,8 @@ export function Header() {
       router.push('/');
     }
   };
+  
+  const isAdmin = user && user.email === ADMIN_EMAIL;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -92,6 +96,14 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                       <Link href="/admin/dashboard" className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
