@@ -1,7 +1,6 @@
 'use server';
 
 import {
-  Auth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -19,14 +18,6 @@ type FormState = {
   success?: boolean;
 };
 
-// This helper function deals with the Firebase Auth object instance.
-// It's a workaround for a known issue with Next.js Server Actions and Firebase SDK.
-async function getAuthForAction(): Promise<Auth> {
-  // In a real app, you might use the Firebase Admin SDK here for server-side operations.
-  // For this client-action-like server action, we re-use the client auth object.
-  return auth;
-}
-
 export async function signUpWithEmail(
   data: z.infer<typeof emailLoginSchema>
 ): Promise<FormState> {
@@ -39,7 +30,6 @@ export async function signUpWithEmail(
   const { email, password } = validatedFields.data;
   
   try {
-    const auth = await getAuthForAction();
     await createUserWithEmailAndPassword(auth, email, password);
     return { success: true };
   } catch (e: any) {
@@ -64,7 +54,6 @@ export async function signInWithEmail(
     const { email, password } = validatedFields.data;
 
   try {
-    const auth = await getAuthForAction();
     await signInWithEmailAndPassword(auth, email, password);
     return { success: true };
   } catch (e: any) {
@@ -76,7 +65,6 @@ export async function signInWithEmail(
 
 export async function signOut(): Promise<FormState> {
   try {
-    const auth = await getAuthForAction();
     await firebaseSignOut(auth);
     return { success: true };
   } catch (e: any) {
