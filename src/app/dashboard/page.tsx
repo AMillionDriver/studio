@@ -9,8 +9,7 @@ export default async function DashboardPage() {
   const avatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
   const animes = await getAnimes();
   
-  // Note: This is still mock data for demonstration.
-  // In a real app, you'd fetch user-specific lists from Firestore.
+  // Note: This is mock data for demonstration.
   const watching = animes.slice(0, 4);
   const planToWatch = animes.slice(2, 6);
   const completed = animes.slice(1, 3).reverse();
@@ -23,7 +22,7 @@ export default async function DashboardPage() {
           <AvatarFallback>AF</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-headline">Welcome back, AniFan123</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">My Watchlist</h1>
           <p className="text-muted-foreground">Here's what's on your list.</p>
         </div>
       </div>

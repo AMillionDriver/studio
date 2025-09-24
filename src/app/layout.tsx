@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/lib/firebase/auth-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -34,14 +33,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
             <div className="flex min-h-screen flex-col">
               <Header />
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
             <Toaster />
-          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

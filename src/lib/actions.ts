@@ -1,11 +1,9 @@
-
 'use server';
 
 import { z } from 'zod';
 import { personalizedAnimeRecommendations } from '@/ai/flows/personalized-anime-recommendations';
 import { getAnimes } from './firebase/firestore';
 import { seedDatabase } from './firebase/seed';
-import { signUpWithEmail } from './firebase/actions';
 
 const recommendationSchema = z.object({
   viewingHistory: z.string().min(1, 'Please enter at least one anime title.'),
@@ -88,62 +86,4 @@ export async function seedInitialData() {
   } catch (error: any) {
     return { success: false, message: error.message };
   }
-}
-
-
-export type AdminCreationState = {
-  status: 'idle' | 'loading' | 'success' | 'error' | 'already_exists';
-  message: string;
-  errors: Record<string, string>;
-}
-
-const adminCreationSchema = z
-  .object({
-    email: z.string().email({ message: 'Please enter a valid email.' }),
-    password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  });
-
-
-export async function createAdminAccount(
-  prevState: AdminCreationState,
-  formData: FormData
-): Promise<AdminCreationState> {
-  
-    const validatedFields = adminCreationSchema.safeParse(
-        Object.fromEntries(formData.entries())
-    );
-
-    if (!validatedFields.success) {
-        const fieldErrors: Record<string, string> = {};
-        for (const issue of validatedFields.error.issues) {
-            fieldErrors[issue.path[0]] = issue.message;
-        }
-        return { 
-            status: 'error', 
-            message: 'Please correct the errors below.',
-            errors: fieldErrors,
-        };
-    }
-
-    const { email, password } = validatedFields.data;
-
-    // Use the rewritten, more reliable signUpWithEmail function
-    const result = await signUpWithEmail({ email, password });
-
-    if (result.success) {
-        return { status: 'success', message: 'Admin account created successfully! Redirecting...', errors: {} };
-    }
-
-    // Check for the specific "already-in-use" error message from the rewritten action
-    if (result.error && (result.error.includes('already registered'))) {
-        return { status: 'already_exists', message: 'Admin account already exists. Redirecting...', errors: {} };
-    }
-
-    // Return any other error messages directly
-    return { status: 'error', message: result.error || 'An unknown error occurred.', errors: {} };
 }
