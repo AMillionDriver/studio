@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              This is your admin control panel. From here, you will be able to manage anime content, users, and site settings.
+              This is your admin control panel. You are one step away from finishing the setup.
             </p>
           </CardContent>
         </Card>
@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              If this is a new setup, click the button below to populate the Firestore database with initial sample data. This only needs to be done once.
+              Your database is currently empty. Click the button below to populate the Firestore database with initial sample data. This only needs to be done once.
             </p>
             <SeedButton />
           </CardContent>
