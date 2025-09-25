@@ -1,11 +1,17 @@
 
-import { getAnimeById, getAnimes } from '@/lib/firebase/firestore';
-import { notFound } from 'next/navigation';
+'use client';
+
+import { getAnimeById, getAnimes, getEpisodesForAnime } from '@/lib/firebase/firestore';
+import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, Tv, Calendar, Clapperboard, Layers } from 'lucide-react';
-import { AnimeCard } from '@/components/anime-card';
 import { RecommendedAnime } from '@/components/recommended-anime';
+import { useEffect, useState } from 'react';
+import type { AnimeSerializable, EpisodeSerializable } from '@/types/anime';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EpisodeSelector } from '@/components/episode-selector';
+
 
 interface WatchPageProps {
   params: {
@@ -15,40 +21,93 @@ interface WatchPageProps {
 
 // Helper to convert YouTube URL to embeddable format
 function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
   try {
     const videoUrl = new URL(url);
     if (videoUrl.hostname === 'www.youtube.com' || videoUrl.hostname === 'youtube.com') {
       const videoId = videoUrl.searchParams.get('v');
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
     } else if (videoUrl.hostname === 'youtu.be') {
       const videoId = videoUrl.pathname.slice(1);
-       return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+       return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
     }
-    return url; // Return original URL if not a standard YouTube link
+    // For now, only support YouTube. In future, could support other direct embed URLs.
+    return null;
   } catch (error) {
     console.error("Invalid URL for embedding:", url, error);
-    return null; // Return null if URL is malformed
+    return null;
   }
 }
 
-export default async function WatchPage({ params }: WatchPageProps) {
-  const anime = await getAnimeById(params.id);
+export default function WatchPage({ params }: WatchPageProps) {
+  const animeId = params.id;
+  const [anime, setAnime] = useState<AnimeSerializable | null>(null);
+  const [episodes, setEpisodes] = useState<EpisodeSerializable[]>([]);
+  const [recommendedAnimes, setRecommendedAnimes] = useState<AnimeSerializable[]>([]);
+  const [currentEpisode, setCurrentEpisode] = useState<EpisodeSerializable | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!anime) {
-    notFound();
+  useEffect(() => {
+    if (!animeId) {
+      setLoading(false);
+      notFound();
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [animeData, episodesData, recommendedData] = await Promise.all([
+            getAnimeById(animeId),
+            getEpisodesForAnime(animeId),
+            getAnimes(12)
+        ]);
+
+        if (!animeData) {
+          return notFound();
+        }
+        
+        setAnime(animeData);
+        setEpisodes(episodesData);
+        setRecommendedAnimes(recommendedData.filter(a => a.id !== animeId));
+        
+        if (episodesData.length > 0) {
+          setCurrentEpisode(episodesData[0]);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch anime data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [animeId]);
+
+  const handleEpisodeSelect = (episode: EpisodeSerializable) => {
+    setCurrentEpisode(episode);
+  };
+  
+  const videoUrlToPlay = currentEpisode?.videoUrl || anime?.streamUrl || '';
+  const embedUrl = getEmbedUrl(videoUrlToPlay);
+
+  if (loading) {
+    return <WatchPageSkeleton />;
   }
 
-  const recommendedAnimes = (await getAnimes(12)).filter(a => a.id !== anime.id);
-  const embedUrl = getEmbedUrl(anime.streamUrl);
+  if (!anime) {
+    return notFound();
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           {/* Video Player */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden bg-background">
              {embedUrl ? (
-                <div className="aspect-video w-full">
+                <div className="aspect-video w-full bg-black">
                     <iframe
                         src={embedUrl}
                         title={`Player for ${anime.title}`}
@@ -59,8 +118,8 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     ></iframe>
                 </div>
              ) : (
-                <div className="aspect-video w-full bg-black flex items-center justify-center">
-                    <p className="text-white">The video link is not a valid YouTube URL.</p>
+                <div className="aspect-video w-full bg-muted flex items-center justify-center">
+                    <p className="text-muted-foreground">Video stream not available.</p>
                 </div>
              )}
           </Card>
@@ -69,6 +128,11 @@ export default async function WatchPage({ params }: WatchPageProps) {
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="text-3xl">{anime.title}</CardTitle>
+               {currentEpisode && (
+                 <CardDescription className="text-lg text-primary font-semibold">
+                    Episode {currentEpisode.episodeNumber}: {currentEpisode.title}
+                 </CardDescription>
+               )}
               <div className="flex flex-wrap gap-2 mt-2">
                 {anime.genres.map((genre) => (
                   <Badge key={genre} variant="secondary">{genre}</Badge>
@@ -96,16 +160,61 @@ export default async function WatchPage({ params }: WatchPageProps) {
                     <span>{new Date(anime.createdAt).getFullYear()}</span>
                  </div>
               </div>
-              <CardDescription className="text-base leading-relaxed">
+              <CardDescription className="text-base leading-relaxed mb-6">
                 {anime.description}
               </CardDescription>
+
+              {episodes.length > 0 && (
+                 <EpisodeSelector 
+                    episodes={episodes}
+                    currentEpisodeNumber={currentEpisode?.episodeNumber || 0}
+                    onEpisodeSelect={handleEpisodeSelect}
+                 />
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Recommended Anime Sidebar */}
         <div className="lg:col-span-1">
-            <RecommendedAnime animes={recommendedAnimes} />
+             <RecommendedAnime animes={recommendedAnimes} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WatchPageSkeleton() {
+  return (
+    <div className="container mx-auto py-8 px-4 md:px-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Skeleton className="aspect-video w-full rounded-lg" />
+          <Card className="mt-6">
+            <CardHeader>
+              <Skeleton className="h-9 w-3/4" />
+              <Skeleton className="h-5 w-1/2 mt-2" />
+              <div className="flex gap-2 mt-4">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6 mb-4">
+                <Skeleton className="h-5 w-12" />
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-1">
+          <Skeleton className="h-[500px] w-full" />
         </div>
       </div>
     </div>
