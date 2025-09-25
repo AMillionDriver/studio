@@ -26,8 +26,8 @@ export function UserNav() {
   }
 
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
     if (user?.isAnonymous) return "G";
+    if (!name) return "U";
     const names = name.split(' ');
     const initials = names.map(n => n[0]).join('');
     return initials.toUpperCase().slice(0, 2);
@@ -57,11 +57,11 @@ export function UserNav() {
             <SheetTitle className="font-normal text-left">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-2">
-                    <p className="text-lg font-semibold leading-none">{user.isAnonymous ? "Guest User" : user.displayName}</p>
+                    <p className="text-lg font-semibold leading-none">{user.isAnonymous ? "Guest User" : user.displayName || "User"}</p>
                     {user.isAdmin && <AdminBadge />}
                 </div>
                 <p className="text-sm leading-none text-muted-foreground">
-                  {user.isAnonymous ? "Anonymous" : user.email}
+                  {user.isAnonymous ? "You are browsing anonymously" : user.email}
                 </p>
               </div>
             </SheetTitle>
@@ -99,3 +99,5 @@ export function UserNav() {
     </Sheet>
   );
 }
+
+    

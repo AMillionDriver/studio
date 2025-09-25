@@ -34,3 +34,5 @@ export async function uploadAnimeCover(animeId: string, file: File): Promise<str
     throw new Error("Failed to upload cover image.");
   }
 }
+
+    

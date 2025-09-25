@@ -90,13 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const idTokenResult = await getIdTokenResult(firebaseUser, true); // Force refresh the token
-        let isAdmin = idTokenResult.claims.admin === true;
-
-        // Hardcoded check for SUPER ADMIN
-        if (firebaseUser.email === 'nanangnurmansah5@gmail.com') {
-          isAdmin = true;
-        }
-
+        const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
       } else {
         setUser(null);
@@ -315,3 +309,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+    
