@@ -1,126 +1,115 @@
 /**
- * @fileOverview Firestore Security Rules for AniStream.
+ * @fileoverview Firestore Security Rules for AniStream.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles and watchlists.
- * Anime data is publicly readable, but only authorized users can create, update, or delete it.
- * Comments are publicly readable and any signed-in user can create them. Only the comment's author can update or delete their own comments.
+ * This ruleset enforces a user-ownership model for user profiles and watchlists,
+ * while allowing public read access to anime and comments. Write access to comments
+ * is restricted to authenticated users.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profiles, secured with owner-only access.
- * - /users/{userId}/watchlists/{watchlistId}: Stores user watchlists, secured with owner-only access.
- * - /anime/{animeId}: Stores anime information, publicly readable.
- * - /anime/{animeId}/comments/{commentId}: Stores comments for each anime, publicly readable, with owner-only updates and deletes.
+ * - /users/{userId}: Stores user profile data. Only the user can read/write their own profile.
+ * - /users/{userId}/watchlists/{watchlistId}: Stores watchlists for each user. Only the user
+ *   can read/write their own watchlists.
+ * - /anime/{animeId}: Stores anime data. Publicly readable. Owner-only writes are NOT possible
+ *   because there is no ownership field in the schema.
+ * - /anime/{animeId}/comments/{commentId}: Stores comments for each anime. Publicly readable.
+ *   Authenticated users can create comments.
  *
  * Key Security Decisions:
- * - Users can only access their own profiles and watchlists.
- * - Listing of user watchlists is allowed only for the owner.
- * - Anime data is publicly readable to facilitate discovery.
- * - Any authenticated user can create a comment.
- * - Comments include denormalized userId for independent authorization.
+ * - Users can only access their own data (profiles and watchlists).
+ * - Anime data is publicly readable.
+ * - Comments are publicly readable, but creation is restricted to authenticated users.
+ * - Listing of user watchlists is allowed only to the owner.
+ * - The `anime` collection lacks an ownership field. Therefore, writes are not secured. A TODO has been added.
  *
  * Denormalization for Authorization:
- * - Comments include the userId of the author to enable direct ownership checks without additional reads.
+ * - Comments include denormalized author data (authorId, authorName, authorPhotoURL) to avoid
+ *   requiring `get()` calls to the `users` collection for authorization or display purposes.
+ *
+ * Structural Segregation:
+ * - Private user data (profiles, watchlists) is stored under `/users/{userId}`. Public anime data
+ *   is stored in the top-level `/anime` collection.
  */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles, ensuring only the owning user can read and write.
+     * @description Controls access to user profiles. Only the user can read/write their profile.
      * @path /users/{userId}
-     * @allow (create) - User A can create their own profile (auth.uid == userId).
-     * @allow (get, update, delete) - User A can get, update, or delete their own profile (auth.uid == userId).
-     * @deny (create) - User A cannot create a profile with a different userId.
-     * @deny (get, update, delete) - User A cannot get, update, or delete User B's profile.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (create) - User with ID 'user123' can create their profile.
+     *    `request.auth.uid == 'user123'` and `request.resource.data.id == 'user123'`.
+     * @allow (get, update, delete) - User with ID 'user123' can read/update/delete their profile.
+     *    `request.auth.uid == 'user123'`.
+     * @deny (create, update, delete) - User with ID 'user456' cannot create/update/delete user 'user123's profile.
+     *    `request.auth.uid != 'user123'`.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
-      allow list: if false; // Listing all users is not permitted.
+      allow list: if false;
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id; // Enforce immutability of userId
-      allow delete: if isOwner(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Protects user watchlists, ensuring only the owning user can read and write.
+     * @description Controls access to user watchlists. Only the user can read/write their own watchlists.
      * @path /users/{userId}/watchlists/{watchlistId}
-     * @allow (create) - User A can create a watchlist under their profile.
-     * @allow (get, update, delete) - User A can get, update, or delete a watchlist under their profile.
-     * @allow (list) - User A can list watchlists under their profile.
-     * @deny (create) - User A cannot create a watchlist under User B's profile.
-     * @deny (get, update, delete) - User A cannot get, update, or delete a watchlist under User B's profile.
-     * @principle Enforces document ownership for watchlists nested under user profiles.
+     * @allow (create) - User 'user123' can create a watchlist under their profile.
+     *    `request.auth.uid == 'user123'` and `request.resource.data.userId == 'user123'`.
+     * @allow (get, update, delete) - User 'user123' can read/update/delete their own watchlist.
+     *    `request.auth.uid == 'user123'`.
+     * @deny (create, update, delete) - User 'user456' cannot create/update/delete watchlists under user 'user123's profile.
+     *    `request.auth.uid != 'user123'`.
+     * @principle Enforces document ownership for writes; restricts access to a user's own data tree.
      */
     match /users/{userId}/watchlists/{watchlistId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
-      allow delete: if isOwner(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Allows public read access to anime data, while restricting writes.
+     * @description Controls access to anime data. Anime data is publicly readable.
      * @path /anime/{animeId}
-     * @allow (get, list) - Any user can read anime data.
-     * @deny (create, update, delete) - Only authenticated users can create, update, or delete anime data.
-     * @principle Enables public data consumption with restricted write access.
+     * @allow (get, list) - Any user (authenticated or not) can read anime data.
+     * @deny (create, update, delete) - No one can create, update, or delete anime data (writes are disallowed).
+     * @principle Publicly readable data with restricted writes.
      */
     match /anime/{animeId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Allows public read access to comments, and allows signed-in users to create them.
-     *              Only the comment's author can update or delete.
-     * @path /anime/{animeId}/comments/{commentId}
-     * @allow (get, list) - Any user can read comments.
-     * @allow (create) - Any signed-in user can create a comment.
-     * @allow (update, delete) - Only the comment's author can update or delete their comment.
-     * @deny (create) - Non-signed-in users cannot create comments.
-     * @deny (update, delete) - User A cannot update or delete User B's comment.
-     * @principle Enables public comment consumption with restricted write access based on ownership.
+     * @description Controls access to anime comments. Comments are publicly readable, but only authenticated users can create them.
+     * @path /animes/{animeId}/comments/{commentId}
+     * @allow (get, list) - Any user (authenticated or not) can read comments.
+     * @allow (create) - Authenticated users can create comments.
+     * @deny (create) - Unauthenticated users cannot create comments.
+     * @principle Authenticated users can create comments in the anime subcollection.
      */
-    match /anime/{animeId}/comments/{commentId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
-      }
-
-       function isExistingOwner(userId) {
-            return isOwner(userId) && resource != null;
-        }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
+    match /animes/{animeId}/comments/{commentId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }

@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState, type ReactNode } from 'react';
 import Header from '@/components/layout/header';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 // This is a Client Component, responsible for rendering the main body and handling client-side state.
 function AppBody({ children }: { children: ReactNode }) {
@@ -32,6 +33,7 @@ function AppBody({ children }: { children: ReactNode }) {
   
   return (
     <>
+      <FirebaseErrorListener />
       {!loading && <Header />}
       {children}
       <Toaster />
