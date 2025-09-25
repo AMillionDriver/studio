@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
         hostname: 'za.pinterest.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pin.it',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
