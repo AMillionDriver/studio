@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
         hostname: 'pin.it',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

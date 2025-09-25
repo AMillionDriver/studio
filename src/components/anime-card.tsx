@@ -7,19 +7,53 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import type { AnimeSerializable } from '@/types/anime';
+import { firebaseConfig } from '@/lib/firebase/sdk';
 
 interface AnimeCardProps {
   anime: AnimeSerializable;
 }
 
+const ALLOWED_HOSTNAMES = [
+    'placehold.co',
+    'images.unsplash.com',
+    'picsum.photos',
+    'encrypted-tbn0.gstatic.com',
+    'www.google.com',
+    'www.animenewsnetwork.com',
+    'za.pinterest.com',
+    'pin.it',
+    'storage.googleapis.com'
+];
+
+function getValidSrc(url: string | undefined | null): string {
+    if (!url) {
+        return 'https://placehold.co/400x600?text=No+Image';
+    }
+    try {
+        const urlObject = new URL(url);
+        // Check if the hostname is in our allowed list from next.config.js
+        if (ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
+            return url;
+        }
+    } catch (e) {
+        // Invalid URL format
+        return 'https://placehold.co/400x600?text=Invalid+URL';
+    }
+    // Hostname not allowed
+    return `https://placehold.co/400x600/F00/FFF?text=Host+Error&font=lato`;
+}
+
+
 export function AnimeCard({ anime }: AnimeCardProps) {
+  const validSrc = getValidSrc(anime.coverImageUrl);
+  
   return (
     <Link href={`/watch/${anime.id}`} className="group block">
       <Card className="overflow-hidden h-full transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
         <CardContent className="p-0">
           <div className="relative aspect-[2/3] w-full">
             <Image
-              src={anime.coverImageUrl}
+              src={validSrc}
               alt={anime.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
