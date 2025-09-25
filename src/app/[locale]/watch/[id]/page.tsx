@@ -14,6 +14,7 @@ import { VideoPlayer } from '@/components/video-player';
 import { Suspense } from 'react';
 import Loading from './loading';
 import { ExpandableText } from '@/components/expandable-text';
+import { CommentSection } from '@/components/comments/comment-section';
 
 async function WatchPageContent({ animeId }: { animeId: string }) {
     if (!animeId) {
@@ -35,11 +36,11 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
                 <VideoPlayer anime={anime} episodes={episodes} />
 
                 {/* Anime Details */}
-                <Card className="mt-6">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-3xl">{anime.title}</CardTitle>
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -126,6 +127,9 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                         )}
                     </CardContent>
                 </Card>
+                
+                {/* Comment Section */}
+                <CommentSection animeId={anime.id} />
             </div>
 
             {/* Personalized Recommendations Sidebar */}

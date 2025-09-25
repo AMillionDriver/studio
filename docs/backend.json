@@ -98,41 +98,41 @@
       "type": "object",
       "description": "Represents a user comment on an anime.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Comment entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Comment)"
-        },
-        "animeId": {
-          "type": "string",
-          "description": "Reference to Anime. (Relationship: Anime 1:N Comment)"
-        },
         "text": {
           "type": "string",
           "description": "The content of the comment."
         },
-        "timestamp": {
+        "createdAt": {
           "type": "string",
           "description": "The timestamp of when the comment was created.",
           "format": "date-time"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who wrote the comment."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The display name of the user who wrote the comment."
+        },
+        "authorPhotoURL": {
+          "type": "string",
+          "description": "The photo URL of the user who wrote the comment."
         }
       },
       "required": [
-        "id",
-        "userId",
-        "animeId",
         "text",
-        "timestamp"
+        "createdAt",
+        "authorId",
+        "authorName"
       ]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
@@ -190,13 +190,13 @@
         }
       },
       {
-        "path": "/anime/{animeId}/comments/{commentId}",
+        "path": "/animes/{animeId}/comments/{commentId}",
         "definition": {
           "entityName": "Comment",
           "schema": {
             "$ref": "#/backend/entities/Comment"
           },
-          "description": "Stores comments for each anime. Includes denormalized 'userId' for authorization independence.",
+          "description": "Stores comments for each anime. Anyone can read, only authenticated users can write.",
           "params": [
             {
               "name": "animeId",
@@ -210,6 +210,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data is stored under `/users/{userId}`, providing a clear ownership model. Watchlists are nested under users (`/users/{userId}/watchlists/{watchlistId}`) to maintain the user-watchlist relationship and simplify security rules based on user ownership. Anime data is stored in a flat `/anime/{animeId}` collection. Comments are stored in a subcollection under each anime document (`/anime/{animeId}/comments/{commentId}`), including denormalized `userId` and `timestamp` for each comment. This denormalization allows for efficient querying and avoids the need for complex `get()` calls in security rules. This structure enables efficient list operations (QAPs) as filtering can be performed directly on the denormalized comment documents without needing to access parent anime documents. Overall, this design promotes secure, scalable, and maintainable data access patterns."
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data is stored under `/users/{userId}`, providing a clear ownership model. Watchlists are nested under users (`/users/{userId}/watchlists/{watchlistId}`) to maintain the user-watchlist relationship and simplify security rules based on user ownership. Anime data is stored in a flat `/animes/{animeId}` collection. Comments are stored in a subcollection under each anime document (`/animes/{animeId}/comments/{commentId}`), including denormalized author data for efficient read operations. This denormalization allows for efficient querying and avoids the need for complex `get()` calls in security rules, enabling performant display of comment lists."
   }
 }

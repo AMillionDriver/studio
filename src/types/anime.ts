@@ -39,6 +39,16 @@ export interface Episode {
     createdAt: FieldValue | Timestamp;
 }
 
+// Type for a single comment document
+export interface Comment {
+    id: string;
+    text: string;
+    authorId: string;
+    authorName: string;
+    authorPhotoURL: string;
+    createdAt: FieldValue | Timestamp;
+}
+
 
 // Type for data used in client components (serializable)
 export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt' | 'releaseDate' | 'rating'> {
@@ -49,6 +59,10 @@ export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt'
 }
 
 export interface EpisodeSerializable extends Omit<Episode, 'createdAt'> {
+    createdAt: string;
+}
+
+export interface CommentSerializable extends Omit<Comment, 'createdAt'> {
     createdAt: string;
 }
 

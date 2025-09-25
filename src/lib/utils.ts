@@ -15,7 +15,8 @@ const ALLOWED_IMAGE_HOSTNAMES = [
     'www.animenewsnetwork.com',
     'za.pinterest.com',
     'pin.it',
-    'storage.googleapis.com'
+    'storage.googleapis.com',
+    'lh3.googleusercontent.com' // Added for Google account photos
 ];
 
 /**
@@ -40,3 +41,11 @@ export function getValidImageUrl(url: string | undefined | null): string {
         return 'https://placehold.co/400x600/FFA500/FFF?text=Invalid+URL&font=lato';
     }
 }
+
+export const getInitials = (name: string | null | undefined): string => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    const initials = names.map(n => n[0]).join('');
+    return initials.toUpperCase().slice(0, 2);
+};
