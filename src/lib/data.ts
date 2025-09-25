@@ -1,14 +1,17 @@
 
-import { collection, getDocs, query, orderBy, limit, doc, getDoc, OrderByDirection, Timestamp } from 'firebase/firestore';
-import { firestore } from './firebase/sdk';
+import { getFirestore, Timestamp, FieldValue, OrderByDirection } from 'firebase-admin/firestore';
+import { adminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
 
+// Use the Admin SDK's firestore instance
+const firestore = getFirestore(adminApp);
+
 /**
- * Converts a Firestore document snapshot to a serializable Anime object.
+ * Converts a Firestore document snapshot from the Admin SDK to a serializable Anime object.
  * @param doc The document snapshot to convert.
  * @returns A serializable Anime object.
  */
-function docToAnimeSerializable(doc: any): AnimeSerializable {
+function docToAnimeSerializable(doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>): AnimeSerializable {
     const data = doc.data() as Anime;
             
     // Convert Firestore Timestamps to serializable strings
@@ -34,7 +37,7 @@ function docToAnimeSerializable(doc: any): AnimeSerializable {
 
 
 /**
- * Fetches anime documents from the 'animes' collection in Firestore.
+ * Fetches anime documents from the 'animes' collection in Firestore using the Admin SDK.
  * This function is designed to be called from Server Components.
  * @param count Optional number of documents to limit.
  * @param sortField Optional field to order by.
@@ -46,17 +49,16 @@ export async function getAnimes(
     sortField: keyof Anime = 'createdAt',
     sortDirection: OrderByDirection = 'desc'
 ): Promise<AnimeSerializable[]> {
-    const animesCollection = collection(firestore, 'animes');
-    let q = query(animesCollection, orderBy(sortField, sortDirection));
+    const animesCollection = firestore.collection('animes');
+    let q: FirebaseFirestore.Query = animesCollection.orderBy(sortField, sortDirection);
     
     if (count) {
-        q = query(q, limit(count));
+        q = q.limit(count);
     }
     
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await q.get();
 
     if (querySnapshot.empty) {
-        console.log("No animes found in the collection.");
         return [];
     }
 
@@ -69,20 +71,18 @@ export async function getAnimes(
 
 
 /**
- * Fetches a single anime document by its ID from Firestore.
+ * Fetches a single anime document by its ID from Firestore using the Admin SDK.
  * @param id The ID of the anime document to fetch.
  * @returns A promise that resolves to a serializable anime object or null if not found.
  */
 export async function getAnimeById(id: string): Promise<AnimeSerializable | null> {
     if (!id) {
-        console.log("getAnimeById called with no ID.");
         return null;
     }
-    const docRef = doc(firestore, 'animes', id);
-    const docSnap = await getDoc(docRef);
+    const docRef = firestore.collection('animes').doc(id);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists()) {
-        console.log(`No anime found with ID: ${id}`);
+    if (!docSnap.exists) {
         return null;
     }
 
@@ -90,16 +90,16 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
 }
 
 /**
- * Fetches all episodes for a specific anime.
+ * Fetches all episodes for a specific anime using the Admin SDK.
  * @param animeId The ID of the anime.
  * @returns A promise that resolves to an array of serializable episode objects.
  */
 export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSerializable[]> {
     if (!animeId) return [];
 
-    const episodesCollection = collection(firestore, 'animes', animeId, 'episodes');
-    const q = query(episodesCollection, orderBy('episodeNumber', 'asc'));
-    const querySnapshot = await getDocs(q);
+    const episodesCollection = firestore.collection('animes').doc(animeId).collection('episodes');
+    const q = episodesCollection.orderBy('episodeNumber', 'asc');
+    const querySnapshot = await q.get();
 
     if (querySnapshot.empty) {
         return [];
@@ -123,7 +123,7 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
 
 
 /**
- * Fetches a single episode by its ID from an anime's subcollection.
+ * Fetches a single episode by its ID from an anime's subcollection using the Admin SDK.
  * @param animeId The ID of the parent anime.
  * @param episodeId The ID of the episode to fetch.
  * @returns A promise that resolves to a serializable episode object or null.
@@ -131,11 +131,10 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
 export async function getEpisodeById(animeId: string, episodeId: string): Promise<EpisodeSerializable | null> {
     if (!animeId || !episodeId) return null;
 
-    const episodeRef = doc(firestore, 'animes', animeId, 'episodes', episodeId);
-    const docSnap = await getDoc(episodeRef);
+    const episodeRef = firestore.collection('animes').doc(animeId).collection('episodes').doc(episodeId);
+    const docSnap = await episodeRef.get();
 
-    if (!docSnap.exists()) {
-        console.log(`Episode with ID ${episodeId} not found in anime ${animeId}`);
+    if (!docSnap.exists) {
         return null;
     }
 
