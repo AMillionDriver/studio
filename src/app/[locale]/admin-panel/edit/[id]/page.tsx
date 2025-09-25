@@ -126,10 +126,10 @@ export default function EditAnimePage() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                     <Edit className="h-6 w-6 text-primary" />
-                    <CardTitle className="text-2xl">Edit Anime</CardTitle>
+                    <CardTitle className="text-2xl">Edit Anime Series</CardTitle>
                 </div>
                 <CardDescription>
-                  Update the details for &quot;{initialTitle}&quot;.
+                  Update the main details for the series &quot;{initialTitle}&quot;.
                 </CardDescription>
               </div>
               <Link href="/admin-panel" passHref>
@@ -189,7 +189,7 @@ export default function EditAnimePage() {
               />
 
               <p className="text-sm text-muted-foreground">
-                Other fields like genres, episodes, and stream URL are not editable here to maintain data consistency.
+                To manage individual episodes, go back to the anime list and click the &apos;Add Episode&apos; button.
               </p>
 
               <Button type="submit" disabled={isSubmitting || !isDirty || !isValid}>

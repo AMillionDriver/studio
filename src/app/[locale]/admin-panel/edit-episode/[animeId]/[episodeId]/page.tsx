@@ -112,13 +112,13 @@ export default function EditEpisodePage() {
                 <CardTitle className="text-2xl">Edit Episode {episode.episodeNumber}</CardTitle>
               </div>
               <CardDescription>
-                For anime: <span className="font-semibold text-foreground">{anime.title}</span>
+                For anime series: <span className="font-semibold text-foreground">{anime.title}</span>
               </CardDescription>
             </div>
             <Link href={`/admin-panel/add-episode/${animeId}`} passHref>
               <Button variant="outline" size="sm" className="whitespace-nowrap">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Episode List
+                Back to Episode Management
               </Button>
             </Link>
           </div>
