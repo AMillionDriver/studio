@@ -1,19 +1,27 @@
-
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import {
   Swords, Drama, Heart, Ghost, History, Wand2, Music, Bot, Sailboat, School, Gamepad,
-  Rocket, SliceOfLife, Star, Tv, CircleHelp, Users, Briefcase, Award, Car, Plane, ShieldQuestion, Utensils, Brain, Glasses, ShieldAlert
+  Rocket, SliceOfLife, Star, Tv, Users, Award, ShieldQuestion, Utensils, Brain, Glasses, ShieldAlert,
+  Cog, Bomb, Sun, Dna, Microscope, BookOpen, Clock, Shield, Anchor, GraduationCap, Mountain
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 // Daftar genre umum yang telah ditentukan
 const commonGenres = [
   'Shōnen', 'Shōjo', 'Seinen', 'Josei', 'Kodomo', 'Aksi', 'Petualangan', 'Fantasi', 
   'Sci-Fi', 'Slice of Life', 'Komedi', 'Romansa', 'Horor', 'Misteri', 'Isekai', 
   'Mecha', 'Olahraga', 'Musikal', 'Thriller', 'Psikologis', 'Gourmet', 'Historis', 
-  'Magical Girl', 'Harem', 'Reverse Harem', 'Ecchi'
+  'Magical Girl', 'Harem', 'Reverse Harem'
 ];
+
+const nicheGenres = [
+  'Steampunk', 'Cyberpunk', 'Post-Apocalyptic', 'Gore', 'Dementia', 'Game', 'Virtual World', 
+  'Yuri', 'Shōjo-ai', 'Yaoi', 'Shōnen-ai', 'Ecchi', 'Parody', 'Survival', 'Time Travel', 
+  'Military', 'Samurai', 'Kaiju', 'Gakuen'
+];
+
 
 // Pemetaan dari nama genre ke ikon Lucide
 const genreIconMap: Record<string, React.FC<LucideProps>> = {
@@ -40,10 +48,27 @@ const genreIconMap: Record<string, React.FC<LucideProps>> = {
     'slice of life': Utensils,
     'olahraga': Award,
     'thriller': ShieldAlert,
-    'ecchi': ShieldAlert, // Placeholder icon
     'gourmet': Utensils,
     'harem': Users,
     'reverse harem': Users,
+    'steampunk': Cog,
+    'cyberpunk': Dna,
+    'post-apocalyptic': Bomb,
+    'gore': ShieldAlert,
+    'dementia': Microscope,
+    'virtual world': Dna,
+    'yuri': Heart,
+    'shōjo-ai': Heart,
+    'yaoi': Heart,
+    'shōnen-ai': Heart,
+    'ecchi': ShieldAlert,
+    'parody': Drama,
+    'survival': Anchor,
+    'time travel': Clock,
+    'military': Shield,
+    'samurai': Swords,
+    'kaiju': Mountain,
+    'gakuen': GraduationCap,
 };
 
 function getGenreIcon(genre: string) {
@@ -52,23 +77,40 @@ function getGenreIcon(genre: string) {
     return Icon ? <Icon className="h-8 w-8 text-primary" /> : <Tv className="h-8 w-8 text-primary" />;
 }
 
+function GenreGrid({ genres }: { genres: string[] }) {
+    return (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {genres.map(genre => (
+            <Link key={genre} href={`/genre/${encodeURIComponent(genre)}`} className="group">
+                <Card className="flex flex-col items-center justify-center p-6 aspect-square transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1">
+                {getGenreIcon(genre)}
+                <p className="mt-3 font-semibold text-center text-sm md:text-base group-hover:text-primary transition-colors">{genre}</p>
+                </Card>
+            </Link>
+            ))}
+        </div>
+    );
+}
+
 export default async function GenrePage() {
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Daftar Genre Umum</h1>
-        <p className="text-muted-foreground mt-1">Jelajahi anime berdasarkan kategori paling populer.</p>
+    <div className="container mx-auto py-10 px-4 md:px-6 space-y-12">
+      <div>
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Daftar Genre Umum</h1>
+            <p className="text-muted-foreground mt-1">Jelajahi anime berdasarkan kategori paling populer.</p>
+        </div>
+        <GenreGrid genres={commonGenres} />
       </div>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {commonGenres.map(genre => (
-          <Link key={genre} href={`/genre/${encodeURIComponent(genre)}`} className="group">
-            <Card className="flex flex-col items-center justify-center p-6 aspect-square transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1">
-              {getGenreIcon(genre)}
-              <p className="mt-3 font-semibold text-center text-sm md:text-base group-hover:text-primary transition-colors">{genre}</p>
-            </Card>
-          </Link>
-        ))}
+
+      <Separator />
+
+      <div>
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Niche & Spesifik</h1>
+            <p className="text-muted-foreground mt-1">Temukan kategori yang lebih spesifik dan unik.</p>
+        </div>
+        <GenreGrid genres={nicheGenres} />
       </div>
     </div>
   );
