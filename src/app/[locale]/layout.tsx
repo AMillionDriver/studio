@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import '../globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -8,15 +8,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import Header from '@/components/layout/header';
 import { AuthProvider } from '@/contexts/auth-context';
 import { useAuth } from '@/hooks/use-auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { I18nProviderClient } from '../i18n/client';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-// Since we are using "use client", we can't export metadata directly.
-// We'll handle title and other metadata aspects differently if needed.
-
-function AppLayout({ children }: { children: React.ReactNode }) {
+function AppBody({ children }: { children: ReactNode }) {
   const { loading } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -25,43 +22,39 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (!isMounted) {
-    // To prevent hydration mismatch, we can return a loader or null on the first render.
     return null;
   }
   
   return (
-    <>
+    <div className={`${inter.variable} font-body antialiased`}>
       {!loading && <Header />}
       {children}
       <Toaster />
-    </>
+    </div>
   );
 }
-
 
 export default function LocaleLayout({
   children,
   params: { locale }
-}: Readonly<{
-  children: React.ReactNode;
-  params: { locale: string }
-}>) {
+}: {
+  children: ReactNode;
+  params: { locale: string };
+}) {
   return (
     <I18nProviderClient locale={locale}>
-      <div className={`${inter.variable} font-body antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <AppLayout>
-              {children}
-            </AppLayout>
-          </AuthProvider>
-        </ThemeProvider>
-      </div>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <AuthProvider>
+          <AppBody>
+            {children}
+          </AppBody>
+        </AuthProvider>
+      </ThemeProvider>
     </I18nProviderClient>
   );
 }
