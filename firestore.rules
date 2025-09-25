@@ -1,115 +1,121 @@
 /**
- * @fileoverview Firestore Security Rules for AniStream.
+ * @file Firebase Security Rules for AniStream Firestore database.
  *
  * Core Philosophy:
  * This ruleset enforces a user-ownership model for user profiles and watchlists,
- * while allowing public read access to anime and comments. Write access to comments
- * is restricted to authenticated users.
+ * while allowing public read access to anime data. Comments are publicly readable,
+ * but writing is restricted to authenticated users. The structure is designed for
+ * authorization independence and scalability.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data. Only the user can read/write their own profile.
- * - /users/{userId}/watchlists/{watchlistId}: Stores watchlists for each user. Only the user
- *   can read/write their own watchlists.
- * - /anime/{animeId}: Stores anime data. Publicly readable. Owner-only writes are NOT possible
- *   because there is no ownership field in the schema.
- * - /anime/{animeId}/comments/{commentId}: Stores comments for each anime. Publicly readable.
- *   Authenticated users can create comments.
+ * - /users/{userId}: Stores user profiles, accessible only to the user.
+ * - /users/{userId}/watchlists/{watchlistId}: Stores user watchlists, accessible only to the user.
+ * - /anime/{animeId}: Stores anime information, publicly readable.
+ * - /animes/{animeId}/comments/{commentId}: Stores comments for each anime, publicly readable, writeable by authenticated users.
  *
  * Key Security Decisions:
- * - Users can only access their own data (profiles and watchlists).
- * - Anime data is publicly readable.
- * - Comments are publicly readable, but creation is restricted to authenticated users.
- * - Listing of user watchlists is allowed only to the owner.
- * - The `anime` collection lacks an ownership field. Therefore, writes are not secured. A TODO has been added.
- *
- * Denormalization for Authorization:
- * - Comments include denormalized author data (authorId, authorName, authorPhotoURL) to avoid
- *   requiring `get()` calls to the `users` collection for authorization or display purposes.
- *
- * Structural Segregation:
- * - Private user data (profiles, watchlists) is stored under `/users/{userId}`. Public anime data
- *   is stored in the top-level `/anime` collection.
+ * - User listing is disabled for privacy.
+ * - Anime data is publicly readable to allow for open discovery.
+ * - Comments include denormalized author data for efficient reads.
+ * - Default security posture for ambiguous relationships is strict owner-only access.
  */
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profiles. Only the user can read/write their profile.
+     * @description Controls access to user profile data.
      * @path /users/{userId}
-     * @allow (create) - User with ID 'user123' can create their profile.
-     *    `request.auth.uid == 'user123'` and `request.resource.data.id == 'user123'`.
-     * @allow (get, update, delete) - User with ID 'user123' can read/update/delete their profile.
-     *    `request.auth.uid == 'user123'`.
-     * @deny (create, update, delete) - User with ID 'user456' cannot create/update/delete user 'user123's profile.
-     *    `request.auth.uid != 'user123'`.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) User with ID 'user123' can create their profile.
+     * @deny (create) User with ID 'user456' cannot create a profile with ID 'user123'.
+     * @allow (get) User with ID 'user123' can read their profile.
+     * @deny (get) User with ID 'user456' cannot read user 'user123' profile.
+     * @principle Enforces document ownership for writes and reads.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to user watchlists. Only the user can read/write their own watchlists.
+     * @description Controls access to user watchlists.
      * @path /users/{userId}/watchlists/{watchlistId}
-     * @allow (create) - User 'user123' can create a watchlist under their profile.
-     *    `request.auth.uid == 'user123'` and `request.resource.data.userId == 'user123'`.
-     * @allow (get, update, delete) - User 'user123' can read/update/delete their own watchlist.
-     *    `request.auth.uid == 'user123'`.
-     * @deny (create, update, delete) - User 'user456' cannot create/update/delete watchlists under user 'user123's profile.
-     *    `request.auth.uid != 'user123'`.
-     * @principle Enforces document ownership for writes; restricts access to a user's own data tree.
+     * @allow (create) User with ID 'user123' can create a watchlist under their profile.
+     * @deny (create) User with ID 'user456' cannot create a watchlist under user 'user123' profile.
+     * @allow (get) User with ID 'user123' can read their watchlist.
+     * @deny (get) User with ID 'user456' cannot read user 'user123' watchlist.
+     * @principle Restricts access to a user's own data tree.
      */
     match /users/{userId}/watchlists/{watchlistId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == userId;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to anime data. Anime data is publicly readable.
+     * @description Controls access to anime data.
      * @path /anime/{animeId}
-     * @allow (get, list) - Any user (authenticated or not) can read anime data.
-     * @deny (create, update, delete) - No one can create, update, or delete anime data (writes are disallowed).
-     * @principle Publicly readable data with restricted writes.
+     * @allow (get) Any user can read anime data.
+     * @allow (list) Any user can list anime data.
+     * @deny (create) No one can create anime data. // TODO: Implement admin role for anime creation
+     * @deny (update) No one can update anime data. // TODO: Implement admin role for anime updates
+     * @deny (delete) No one can delete anime data. // TODO: Implement admin role for anime deletion
      */
     match /anime/{animeId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Controls access to anime comments. Comments are publicly readable, but only authenticated users can create them.
+     * @description Controls access to comments on anime.
      * @path /animes/{animeId}/comments/{commentId}
-     * @allow (get, list) - Any user (authenticated or not) can read comments.
-     * @allow (create) - Authenticated users can create comments.
-     * @deny (create) - Unauthenticated users cannot create comments.
-     * @principle Authenticated users can create comments in the anime subcollection.
+     * @allow (get) Any user can read comments.
+     * @allow (list) Any user can list comments.
+     * @allow (create) Authenticated users can create comments.
+     * @deny (update) No one can update comments. Only the author should be able to edit.
+     * @deny (delete) No one can delete comments. Only the author should be able to delete.
+     * @principle Public read, authenticated write.
      */
     match /animes/{animeId}/comments/{commentId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if false;
     }
-  }
 
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
+    // ---- Helper functions ----
 
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
+    /**
+     * @description Checks if the user is signed in.
+     * @return True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
+    /**
+     * @description Checks if the requested user ID matches the authenticated user's ID.
+     * @param {string} userId The user ID to check against.
+     * @return True if the user ID matches the authenticated user's ID, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is the owner of an existing document.
+     * @param {string} userId The user ID to check against.
+     * @return True if the user ID matches the authenticated user's ID and the document exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
   }
 }
