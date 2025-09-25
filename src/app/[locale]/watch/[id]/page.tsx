@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook, Shield } from 'lucide-react';
-import { RecommendedAnime } from '@/components/recommended-anime';
+import { PersonalizedRecommendations } from '@/components/personalized-recommendations';
 import { EpisodeSelector } from '@/components/episode-selector';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -20,18 +20,18 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
         notFound();
     }
 
-    const [anime, episodes, recommendedAnimes] = await Promise.all([
+    const [anime, episodes, allAnimes] = await Promise.all([
         getAnimeById(animeId),
         getEpisodesForAnime(animeId),
-        getAnimes(12) // Fetch recommendations
+        getAnimes() // Fetch all animes for recommendation pool
     ]);
 
     if (!anime) {
         notFound();
     }
     
-    // Filter out the current anime from recommendations
-    const filteredRecommendations = recommendedAnimes.filter(a => a.id !== animeId);
+    // Filter out the current anime from the full list to create a recommendation pool
+    const recommendationPool = allAnimes.filter(a => a.id !== animeId);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -128,9 +128,12 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                 </Card>
             </div>
 
-            {/* Recommended Anime Sidebar */}
+            {/* Personalized Recommendations Sidebar */}
             <div className="lg:col-span-1">
-                <RecommendedAnime animes={filteredRecommendations} />
+                <PersonalizedRecommendations 
+                    watchedAnime={anime}
+                    recommendationPool={recommendationPool}
+                />
             </div>
         </div>
     );

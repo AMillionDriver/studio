@@ -10,6 +10,7 @@ interface RecommendedAnimeProps {
     animes: AnimeSerializable[];
 }
 
+// This is now a fallback component, the main logic is in PersonalizedRecommendations
 export function RecommendedAnime({ animes }: RecommendedAnimeProps) {
     return (
         <Card>
