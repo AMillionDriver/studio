@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Youtube, Instagram, Facebook } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
 import type { AnimeFormData } from "@/types/anime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,9 +33,11 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { AnimeList } from "@/components/anime-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ListVideo, UploadCloud } from "lucide-react";
+import { ListVideo, UploadCloud, Link as LinkIcon, User, VenetianMask } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import React from "react";
+import { Separator } from "@/components/ui/separator";
+import { XIcon } from "@/components/icons/x-icon";
 
 
 const animeFormSchema = z.object({
@@ -46,8 +48,13 @@ const animeFormSchema = z.object({
   rating: z.string().optional(),
   releaseDate: z.date().optional(),
   coverImageUploadMethod: z.enum(['url', 'upload']),
-  coverImageUrl: z.string().optional(),
+  coverImageUrl: z.string().url().optional().or(z.literal('')),
   coverImageFile: z.instanceof(FileList).optional(),
+  creatorName: z.string().optional(),
+  creatorYoutube: z.string().url().optional().or(z.literal('')),
+  creatorInstagram: z.string().url().optional().or(z.literal('')),
+  creatorTwitter: z.string().url().optional().or(z.literal('')),
+  creatorFacebook: z.string().url().optional().or(z.literal('')),
 }).refine(data => {
     if (data.coverImageUploadMethod === 'url') {
         return !!data.coverImageUrl && z.string().url().safeParse(data.coverImageUrl).success;
@@ -80,6 +87,11 @@ export default function AdminDashboardPage() {
       releaseDate: undefined,
       coverImageUploadMethod: 'url',
       coverImageUrl: "",
+      creatorName: "",
+      creatorYoutube: "",
+      creatorInstagram: "",
+      creatorTwitter: "",
+      creatorFacebook: "",
     },
   });
 
@@ -187,6 +199,83 @@ export default function AdminDashboardPage() {
                                 </FormItem>
                               )}
                             />
+                            
+                            <Separator/>
+
+                            <div>
+                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2"><VenetianMask />Creator / Studio Information</h3>
+                                <div className="space-y-4">
+                                     <FormField
+                                        control={form.control}
+                                        name="creatorName"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Creator/Studio Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g., MAPPA" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="creatorYoutube"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center gap-2"><Youtube className="text-red-500" /> YouTube</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://youtube.com/..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="creatorInstagram"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center gap-2"><Instagram className="text-pink-500"/> Instagram</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://instagram.com/..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="creatorTwitter"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center gap-2"><XIcon className="h-4 w-4"/> X / Twitter</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://x.com/..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="creatorFacebook"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center gap-2"><Facebook className="text-blue-600"/> Facebook</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://facebook.com/..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Separator/>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                               <FormField
@@ -243,7 +332,7 @@ export default function AdminDashboardPage() {
                                         <FormItem>
                                             <FormLabel>Cover Image URL</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                                                <Input placeholder="https://example.com/image.jpg" {...field} value={field.value ?? ''} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -353,5 +442,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    

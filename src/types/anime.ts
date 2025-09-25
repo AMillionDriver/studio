@@ -1,6 +1,16 @@
 
 import type { FieldValue, Timestamp } from 'firebase/firestore';
 
+export interface Creator {
+    name: string;
+    socials: {
+        youtube?: string;
+        instagram?: string;
+        twitter?: string;
+        facebook?: string;
+    };
+}
+
 // Type for data coming from/going to Firestore
 export interface Anime {
     id: string;
@@ -9,6 +19,7 @@ export interface Anime {
     streamUrl: string;
     coverImageUrl: string;
     genres: string[];
+    creator?: Creator;
     rating?: number;
     episodes: number; // This will now represent the total number of episodes
     createdAt: FieldValue | Timestamp;
@@ -49,6 +60,11 @@ export interface AnimeFormData {
     coverImageUploadMethod: 'url' | 'upload';
     coverImageUrl?: string;
     coverImageFile?: FileList;
+    creatorName?: string;
+    creatorYoutube?: string;
+    creatorInstagram?: string;
+    creatorTwitter?: string;
+    creatorFacebook?: string;
 }
 
 export interface EpisodeFormData {

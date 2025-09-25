@@ -3,7 +3,7 @@
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminApp } from './firebase/admin-sdk';
-import type { Anime, AnimeFormData, AnimeUpdateFormData } from '@/types/anime';
+import type { Anime, AnimeFormData, AnimeUpdateFormData, Creator } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
 
@@ -28,6 +28,13 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
   const coverImageUrl = formData.get('coverImageUrl') as string | null;
   const coverImageFile = formData.get('coverImageFile') as File | null;
   const uploadMethod = formData.get('coverImageUploadMethod') as 'url' | 'upload';
+
+  const creatorName = formData.get('creatorName') as string | null;
+  const creatorYoutube = formData.get('creatorYoutube') as string | null;
+  const creatorInstagram = formData.get('creatorInstagram') as string | null;
+  const creatorTwitter = formData.get('creatorTwitter') as string | null;
+  const creatorFacebook = formData.get('creatorFacebook') as string | null;
+
 
   if (!title || !description || !streamUrl || !genres) {
     return { success: false, error: 'Missing required fields. Please fill out all parts of the form.' };
@@ -73,6 +80,18 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
       updatedAt: FieldValue.serverTimestamp(),
       releaseDate: releaseDate,
     };
+
+    if (creatorName) {
+        animeData.creator = {
+            name: creatorName,
+            socials: {
+                ...(creatorYoutube && { youtube: creatorYoutube }),
+                ...(creatorInstagram && { instagram: creatorInstagram }),
+                ...(creatorTwitter && { twitter: creatorTwitter }),
+                ...(creatorFacebook && { facebook: creatorFacebook }),
+            }
+        }
+    }
     
     batch.set(animeRef, animeData);
 
