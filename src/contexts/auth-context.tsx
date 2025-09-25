@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const idTokenResult = await getIdTokenResult(firebaseUser, true); // Force refresh the token
+        const idTokenResult = await firebaseUser.getIdTokenResult(true); // Force refresh the token
         const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
         await setSessionCookie(firebaseUser);
@@ -240,22 +240,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateUserProfile = async (data: { displayName?: string; photoFile?: File | null }) => {
-    if (!user) return;
+    if (!auth.currentUser) return;
     setLoading(true);
 
     try {
-      let photoURL = user.photoURL;
+      let photoURL = auth.currentUser.photoURL;
       if (data.photoFile) {
-        photoURL = await uploadProfilePicture(user.uid, data.photoFile);
+        photoURL = await uploadProfilePicture(auth.currentUser.uid, data.photoFile);
       }
 
-      await updateProfile(user, {
-        displayName: data.displayName ?? user.displayName,
+      await updateProfile(auth.currentUser, {
+        displayName: data.displayName ?? auth.currentUser.displayName,
         photoURL: photoURL
       });
-
-      // The onAuthStateChanged listener will automatically pick up the changes and update the user state.
-      // This prevents the infinite reload loop.
       
       toast({
         title: "Profil Diperbarui",
@@ -269,7 +266,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
     } finally {
-      // This ensures the loading skeleton is removed, whether the update succeeds or fails.
       setLoading(false);
     }
   };

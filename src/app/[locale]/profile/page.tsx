@@ -45,7 +45,7 @@ export default function ProfilePage() {
 
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: { displayName: user?.displayName || "" },
+    defaultValues: { displayName: "" },
   });
   
   useEffect(() => {
@@ -112,6 +112,7 @@ export default function ProfilePage() {
 
   const isPasswordSignIn = user.providerData.some(p => p.providerId === "password");
   const isGoogleSignIn = user.providerData.some(p => p.providerId === "google.com");
+  const isAnonymous = user.isAnonymous;
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -124,7 +125,7 @@ export default function ProfilePage() {
                   <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
                   <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                 </Avatar>
-                {isEditingProfile && (
+                {isEditingProfile && !isAnonymous && (
                   <>
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" className="hidden" />
                     <Button
@@ -141,10 +142,10 @@ export default function ProfilePage() {
                 {!isEditingProfile ? (
                   <>
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-2xl">{user.displayName || "Guest User"}</CardTitle>
+                      <CardTitle className="text-2xl">{user.displayName || (isAnonymous ? "Guest User" : "User")}</CardTitle>
                       {user.isAdmin && <AdminBadge />}
                     </div>
-                    <CardDescription>{user.isAnonymous ? "You are browsing as a guest." : user.email}</CardDescription>
+                    <CardDescription>{isAnonymous ? "You are browsing as a guest." : user.email}</CardDescription>
                   </>
                 ) : (
                   <Form {...profileForm}>
@@ -163,7 +164,7 @@ export default function ProfilePage() {
                   </Form>
                 )}
               </div>
-              {!user.isAnonymous && (
+              {!isAnonymous && (
                 <div>
                   {isEditingProfile ? (
                     <div className="flex gap-2">
@@ -180,37 +181,41 @@ export default function ProfilePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-              <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center"><User className="mr-2 h-5 w-5 text-primary" /> User Information</h3>
-                  <Separator />
-                  <div className="mt-4 space-y-2">
-                      <p><strong>Email:</strong> {user.email || "Not provided"}</p>
-                      <p><strong>User ID:</strong> <code className="text-sm bg-muted p-1 rounded-sm">{user.uid}</code></p>
-                  </div>
-              </div>
-
-              <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center"><Link2 className="mr-2 h-5 w-5 text-primary" /> Linked Accounts</h3>
-                  <Separator />
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                        <div className="flex items-center gap-3">
-                            <GoogleIcon className="h-6 w-6"/>
-                            <span className="font-medium">Google</span>
+              {!isAnonymous && (
+                <>
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center"><User className="mr-2 h-5 w-5 text-primary" /> User Information</h3>
+                        <Separator />
+                        <div className="mt-4 space-y-2">
+                            <p><strong>Email:</strong> {user.email || "Not provided"}</p>
+                            <p><strong>User ID:</strong> <code className="text-sm bg-muted p-1 rounded-sm">{user.uid}</code></p>
                         </div>
-                        {isGoogleSignIn ? (
-                             <Badge variant="secondary">Connected</Badge>
-                        ) : (
-                            <Button onClick={linkWithGoogle}>Link Account</Button>
-                        )}
                     </div>
-                    {/* Add other providers similarly */}
-                  </div>
-              </div>
+
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center"><Link2 className="mr-2 h-5 w-5 text-primary" /> Linked Accounts</h3>
+                        <Separator />
+                        <div className="mt-4 space-y-4">
+                          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                              <div className="flex items-center gap-3">
+                                  <GoogleIcon className="h-6 w-6"/>
+                                  <span className="font-medium">Google</span>
+                              </div>
+                              {isGoogleSignIn ? (
+                                  <Badge variant="secondary">Connected</Badge>
+                              ) : (
+                                  <Button onClick={linkWithGoogle}>Link Account</Button>
+                              )}
+                          </div>
+                          {/* Add other providers similarly */}
+                        </div>
+                    </div>
+                </>
+              )}
           </CardContent>
         </Card>
 
-        {isPasswordSignIn && (
+        {isPasswordSignIn && !isAnonymous && (
             <>
                 <Card>
                     <CardHeader>
@@ -268,5 +273,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
