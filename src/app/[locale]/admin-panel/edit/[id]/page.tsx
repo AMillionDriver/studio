@@ -45,7 +45,7 @@ const editFormSchema = z.object({
 
   coverImageUploadMethod: z.enum(['url', 'upload']),
   coverImageUrl: z.string().url().optional().or(z.literal('')),
-  coverImageFile: z.instanceof(FileList).optional(),
+  coverImageFile: (typeof window === 'undefined' ? z.any() : z.instanceof(FileList)).optional(),
 }).refine(data => {
     if (data.coverImageUploadMethod === 'url' && !data.coverImageFile) { // only validate if not switching to file
         return !!data.coverImageUrl && z.string().url().safeParse(data.coverImageUrl).success;

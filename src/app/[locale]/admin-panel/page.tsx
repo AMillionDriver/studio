@@ -49,7 +49,7 @@ const animeFormSchema = z.object({
   releaseDate: z.date().optional(),
   coverImageUploadMethod: z.enum(['url', 'upload']),
   coverImageUrl: z.string().url().optional().or(z.literal('')),
-  coverImageFile: z.instanceof(FileList).optional(),
+  coverImageFile: (typeof window === 'undefined' ? z.any() : z.instanceof(FileList)).optional(),
   creatorName: z.string().optional(),
   creatorYoutube: z.string().url().optional().or(z.literal('')),
   creatorInstagram: z.string().url().optional().or(z.literal('')),
@@ -442,3 +442,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
