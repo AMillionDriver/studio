@@ -10,6 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Send } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase/sdk';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface CommentFormProps {
   animeId: string;
@@ -20,30 +24,48 @@ export function CommentForm({ animeId }: CommentFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const [commentText, setCommentText] = useState('');
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) return;
+    if (!user || !commentText.trim()) return;
 
-    const formData = new FormData(event.currentTarget);
-    const idToken = await user.getIdToken();
-    formData.set('idToken', idToken);
+    startTransition(() => {
+        const commentsCollection = collection(firestore, 'animes', animeId, 'comments');
+        
+        const commentData = {
+          text: commentText,
+          authorId: user.uid,
+          authorName: user.displayName || 'Anonymous User',
+          authorPhotoURL: user.photoURL || '',
+          createdAt: serverTimestamp(),
+        };
 
-    startTransition(async () => {
-      const result = await addComment(animeId, formData);
-      if (result.success) {
-        formRef.current?.reset();
-      } else {
-        toast({
-          title: 'Gagal Mengirim Komentar',
-          description: result.error,
-          variant: 'destructive',
-        });
-      }
+        addDoc(commentsCollection, commentData)
+          .then(() => {
+            setCommentText(''); // Clear textarea on success
+          })
+          .catch((error) => {
+            console.error('Frontend error adding comment:', error);
+            
+            const permissionError = new FirestorePermissionError({
+              path: `animes/${animeId}/comments`,
+              operation: 'create',
+              requestResourceData: commentData,
+            });
+
+            errorEmitter.emit('permission-error', permissionError);
+
+            toast({
+              title: 'Gagal Mengirim Komentar',
+              description: 'Anda tidak memiliki izin untuk melakukan aksi ini.',
+              variant: 'destructive',
+            });
+          });
     });
   };
 
-  if (!user) return null;
+  if (!user || user.isAnonymous) return null;
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="flex items-start gap-4">
@@ -59,9 +81,11 @@ export function CommentForm({ animeId }: CommentFormProps) {
           rows={3}
           required
           disabled={isPending}
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || !commentText.trim()}>
             <Send className="mr-2 h-4 w-4" />
             {isPending ? 'Mengirim...' : 'Kirim'}
           </Button>

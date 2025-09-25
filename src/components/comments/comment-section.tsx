@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { MessageSquare } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
 
 interface CommentSectionProps {
   animeId: string;
@@ -26,7 +27,13 @@ export function CommentSection({ animeId }: CommentSectionProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {loading ? (
-          <div className="text-center text-muted-foreground">Memuat...</div>
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-8 w-24 ml-auto" />
+            </div>
+          </div>
         ) : user && !user.isAnonymous ? (
           <CommentForm animeId={animeId} />
         ) : (
@@ -34,6 +41,10 @@ export function CommentSection({ animeId }: CommentSectionProps) {
             Anda harus{' '}
             <Button variant="link" asChild className="p-0 h-auto">
               <Link href="/login">masuk</Link>
+            </Button>{' '}
+            atau{' '}
+            <Button variant="link" asChild className="p-0 h-auto">
+              <Link href="/signup">mendaftar</Link>
             </Button>{' '}
             untuk meninggalkan komentar.
           </CardDescription>

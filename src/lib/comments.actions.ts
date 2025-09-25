@@ -10,6 +10,8 @@ import type { Comment } from '@/types/anime';
 const firestore = getFirestore(adminApp);
 const auth = getAuth(adminApp);
 
+// This server action is kept for potential future use where admin-level operations might be needed.
+// The primary comment submission logic has been moved to the client for detailed error handling.
 export async function addComment(animeId: string, formData: FormData): Promise<{ success: boolean; error?: string }> {
   const commentText = formData.get('comment') as string;
   const idToken = formData.get('idToken') as string;
@@ -42,7 +44,10 @@ export async function addComment(animeId: string, formData: FormData): Promise<{
 
     return { success: true };
   } catch (error: any) {
-    console.error('Error adding comment:', error);
+    console.error('Error adding comment via server action:', error);
+    if (error.code === 'permission-denied') {
+         return { success: false, error: `Gagal menambahkan komentar: Izin ditolak oleh aturan keamanan Firestore.` };
+    }
     return { success: false, error: `Gagal menambahkan komentar: ${error.message}` };
   }
 }
