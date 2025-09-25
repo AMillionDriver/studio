@@ -1,16 +1,7 @@
-import './globals.css';
-import type { ReactNode } from 'react';
 
+import type { ReactNode } from 'react';
+// The root layout is now handled in [locale]/layout.tsx to ensure
+// the locale is always available and providers are set up correctly.
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-          <title>AniStream</title>
-          <meta name="description" content="A user-friendly anime streaming platform." />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      {/* The body tag is now in [locale]/layout.tsx to apply font styles correctly */}
-      {children}
-    </html>
-  );
+  return children;
 }
