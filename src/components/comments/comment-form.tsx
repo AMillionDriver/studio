@@ -5,7 +5,6 @@ import { useRef, useState, useTransition } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { addComment } from '@/lib/comments.actions';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getInitials } from '@/lib/utils';
@@ -28,7 +27,7 @@ export function CommentForm({ animeId }: CommentFormProps) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user || !commentText.trim()) return;
+    if (!user || user.isAnonymous || !commentText.trim()) return;
 
     startTransition(() => {
         const commentsCollection = collection(firestore, 'animes', animeId, 'comments');
@@ -41,21 +40,26 @@ export function CommentForm({ animeId }: CommentFormProps) {
           createdAt: serverTimestamp(),
         };
 
+        // Use client-side addDoc and attach a .catch() for error handling
         addDoc(commentsCollection, commentData)
           .then(() => {
             setCommentText(''); // Clear textarea on success
           })
           .catch((error) => {
-            console.error('Frontend error adding comment:', error);
+            // This is the critical part for contextual error handling
+            console.error('Failed to add comment:', error);
             
+            // 1. Create the detailed, contextual error
             const permissionError = new FirestorePermissionError({
-              path: `animes/${animeId}/comments`,
-              operation: 'create',
-              requestResourceData: commentData,
+              path: `animes/${animeId}/comments`, // The path of the collection we are writing to
+              operation: 'create', // The operation being performed
+              requestResourceData: commentData, // The data we tried to send
             });
 
+            // 2. Emit the error globally
             errorEmitter.emit('permission-error', permissionError);
 
+            // 3. Show a generic error to the user (the dev overlay will show the details)
             toast({
               title: 'Gagal Mengirim Komentar',
               description: 'Anda tidak memiliki izin untuk melakukan aksi ini.',
