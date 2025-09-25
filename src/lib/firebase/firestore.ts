@@ -1,20 +1,28 @@
 
-import { collection, getDocs, query, where, limit, orderBy, Timestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, orderBy, Timestamp, doc, getDoc, OrderByDirection } from 'firebase/firestore';
 import { firestore } from './sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
 
 /**
- * Fetches all anime documents from the 'animes' collection in Firestore,
- * ordered by creation date.
+ * Fetches anime documents from the 'animes' collection in Firestore.
+ * @param count Optional number of documents to limit.
+ * @param sortField Optional field to order by.
+ * @param sortDirection Optional direction to order by ('asc' or 'desc').
  * @returns A promise that resolves to an array of serializable anime objects.
  */
-export async function getAnimes(count?: number): Promise<AnimeSerializable[]> {
+export async function getAnimes(
+    count?: number,
+    sortField: keyof Anime = 'createdAt',
+    sortDirection: OrderByDirection = 'desc'
+): Promise<AnimeSerializable[]> {
     try {
         const animesCollection = collection(firestore, 'animes');
-        let q = query(animesCollection, orderBy('createdAt', 'desc'));
+        let q = query(animesCollection, orderBy(sortField, sortDirection));
+        
         if (count) {
             q = query(q, limit(count));
         }
+        
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
