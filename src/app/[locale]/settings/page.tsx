@@ -15,16 +15,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { AnimeRating } from "@/types/anime";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const ratings: AnimeRating[] = ["G", "PG", "PG-13", "R", "NC-17"];
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
+  const [isParentalControlEnabled, setIsParentalControlEnabled] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleParentalControlSave = async () => {
+    if (!isParentalControlEnabled) return;
+    setIsSaving(true);
+    setSaveSuccess(false);
+
+    // Simulate an API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    setIsSaving(false);
+    setSaveSuccess(true);
+    
+    // Revert button color after a short delay
+    setTimeout(() => {
+        setSaveSuccess(false);
+    }, 2000);
+  };
+
 
   return (
     <div className="container mx-auto max-w-2xl py-10 space-y-8">
@@ -123,44 +145,59 @@ export default function SettingsPage() {
                     <Label htmlFor="parental-control-switch" className="text-base">Aktifkan Kontrol Orang Tua</Label>
                     <p className="text-sm text-muted-foreground">Sembunyikan konten di atas rating yang dipilih.</p>
                 </div>
-                <Switch id="parental-control-switch" />
+                <Switch 
+                    id="parental-control-switch" 
+                    checked={isParentalControlEnabled}
+                    onCheckedChange={setIsParentalControlEnabled}
+                />
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="content-rating-select">Batasan Konten</Label>
-                <Select>
-                    <SelectTrigger id="content-rating-select" className="w-[280px]">
-                        <SelectValue placeholder="Pilih rating maksimum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {ratings.map(r => (
-                          <SelectItem key={r} value={r}>
-                            {r === 'G' && 'G - Semua Umur'}
-                            {r === 'PG' && 'PG - Perlu Bimbingan Orang Tua'}
-                            {r === 'PG-13' && 'PG-13 - Peringatan Keras untuk Orang Tua'}
-                            {r === 'R' && 'R - Terbatas'}
-                            {r === 'NC-17' && 'NC-17 - Khusus Dewasa'}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">Anime dengan rating di atas ini tidak akan ditampilkan.</p>
-            </div>
-            
-            <div className="space-y-2">
-                <Label htmlFor="pin-input">PIN Perlindungan</Label>
-                <div className="flex items-center gap-2 max-w-xs">
-                    <Lock className="h-5 w-5 text-muted-foreground" />
-                    <Input id="pin-input" type="password" maxLength={4} placeholder="Masukkan 4 digit PIN" />
+            <div className={cn("space-y-6 transition-opacity", !isParentalControlEnabled && "opacity-50 pointer-events-none")}>
+                <div className="space-y-2">
+                    <Label htmlFor="content-rating-select">Batasan Konten</Label>
+                    <Select disabled={!isParentalControlEnabled}>
+                        <SelectTrigger id="content-rating-select" className="w-[280px]">
+                            <SelectValue placeholder="Pilih rating maksimum" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ratings.map(r => (
+                              <SelectItem key={r} value={r}>
+                                {r === 'G' && 'G - Semua Umur'}
+                                {r === 'PG' && 'PG - Perlu Bimbingan Orang Tua'}
+                                {r === 'PG-13' && 'PG-13 - Peringatan Keras untuk Orang Tua'}
+                                {r === 'R' && 'R - Terbatas'}
+                                {r === 'NC-17' && 'NC-17 - Khusus Dewasa'}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">Anime dengan rating di atas ini tidak akan ditampilkan.</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Gunakan PIN untuk mengubah pengaturan ini atau mengakses konten yang dibatasi.</p>
+                
+                <div className="space-y-2">
+                    <Label htmlFor="pin-input">PIN Perlindungan</Label>
+                    <div className="flex items-center gap-2 max-w-xs">
+                        <Lock className="h-5 w-5 text-muted-foreground" />
+                        <Input id="pin-input" type="password" maxLength={4} placeholder="Masukkan 4 digit PIN" disabled={!isParentalControlEnabled}/>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Gunakan PIN untuk mengubah pengaturan ini atau mengakses konten yang dibatasi.</p>
+                </div>
             </div>
 
             <div>
-                <Button>Simpan Pengaturan</Button>
+                <Button 
+                    onClick={handleParentalControlSave} 
+                    disabled={!isParentalControlEnabled || isSaving}
+                    className={cn(
+                        saveSuccess && "bg-green-500 hover:bg-green-600"
+                    )}
+                >
+                    {isSaving ? "Menyimpan..." : saveSuccess ? "Tersimpan!" : "Simpan Pengaturan"}
+                </Button>
             </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
