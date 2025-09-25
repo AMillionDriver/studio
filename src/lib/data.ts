@@ -2,7 +2,6 @@
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, OrderByDirection, Timestamp } from 'firebase/firestore';
 import { firestore } from './firebase/sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
-import { unstable_noStore as noStore } from 'next/cache';
 
 /**
  * Converts a Firestore document snapshot to a serializable Anime object.
@@ -47,7 +46,6 @@ export async function getAnimes(
     sortField: keyof Anime = 'createdAt',
     sortDirection: OrderByDirection = 'desc'
 ): Promise<AnimeSerializable[]> {
-    noStore(); // Opt out of caching for dynamic data
     try {
         const animesCollection = collection(firestore, 'animes');
         let q = query(animesCollection, orderBy(sortField, sortDirection));
@@ -84,7 +82,6 @@ export async function getAnimes(
  * @returns A promise that resolves to a serializable anime object or null if not found.
  */
 export async function getAnimeById(id: string): Promise<AnimeSerializable | null> {
-    noStore();
     try {
         if (!id) {
             console.log("getAnimeById called with no ID.");
@@ -112,7 +109,6 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
  * @returns A promise that resolves to an array of serializable episode objects.
  */
 export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSerializable[]> {
-    noStore();
     try {
         if (!animeId) return [];
 
@@ -153,7 +149,6 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
  * @returns A promise that resolves to a serializable episode object or null.
  */
 export async function getEpisodeById(animeId: string, episodeId: string): Promise<EpisodeSerializable | null> {
-    noStore();
     try {
         if (!animeId || !episodeId) return null;
 
