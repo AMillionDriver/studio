@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
       rating: "",
       releaseDate: undefined,
       coverImageUploadMethod: 'url',
-      coverImageUrl: "",
+      coverImageUrl: undefined,
     },
   });
 
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
                                         <FormItem>
                                             <FormLabel>Cover Image URL</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                                                <Input placeholder="https://example.com/image.jpg" {...field} value={field.value ?? ''} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -353,3 +353,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
