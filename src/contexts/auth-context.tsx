@@ -17,7 +17,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   AuthError,
-  updateProfile as firebaseUpdateProfile, // Renamed to avoid conflict
+  updateProfile as firebaseUpdateProfile, 
   linkWithPopup,
   getIdTokenResult
 } from 'firebase/auth';
@@ -106,7 +106,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       if (firebaseUser) {
         await setSessionCookie(firebaseUser);
-        const idTokenResult = await getIdTokenResult(firebaseUser, true);
+        // Force refresh the token to get the latest custom claims.
+        const idTokenResult = await getIdTokenResult(firebaseUser, true); 
         const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
       } else {
@@ -228,13 +229,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (photoFile) {
         photoURL = await uploadProfilePicture(auth.currentUser.uid, photoFile);
       }
-      
+
       await firebaseUpdateProfile(auth.currentUser, {
         displayName: displayName || auth.currentUser.displayName,
         photoURL: photoURL,
       });
 
-      // Reload user to get fresh data from Firebase servers
+      // Reload user to get fresh data, including the new photoURL
       await auth.currentUser.reload();
       const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 
@@ -245,7 +246,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         title: "Profil Diperbarui",
         description: "Informasi profil Anda telah berhasil diperbarui.",
       });
-
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
@@ -257,6 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   const linkWithGoogle = async () => {
     if (!auth.currentUser) return;
