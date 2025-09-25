@@ -31,7 +31,7 @@ const auth = getAuth(app);
 // This is a workaround to store the session cookie
 // on the client side for server components to access.
 async function setSessionCookie(user: User) {
-    const idToken = await user.getIdToken();
+    const idToken = await user.getIdToken(true); // Force refresh
     // Use a server action to set the cookie
     await fetch("/api/auth/session", {
         method: "POST",
@@ -254,6 +254,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         photoURL: photoURL
       });
       
+      // Manually update the user state to trigger re-render
+      setUser(prevUser => {
+        if (!prevUser) return null;
+        // Create a new object to ensure React detects the state change
+        const updatedUser = { ...auth.currentUser, isAdmin: prevUser.isAdmin } as AppUser;
+        return updatedUser;
+      });
+
       toast({
         title: "Profil Diperbarui",
         description: "Informasi profil Anda telah berhasil diperbarui.",
