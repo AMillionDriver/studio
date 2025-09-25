@@ -3,8 +3,6 @@
 
 import { getAuth } from "firebase-admin/auth";
 import { adminApp } from "@/lib/firebase/admin-sdk";
-import { uploadProfilePicture } from "./firebase/storage";
-import { revalidatePath } from "next/cache";
 
 interface CreateUserParams {
     email: string;
@@ -50,55 +48,5 @@ export async function createUser(data: CreateUserParams): Promise<{ success: boo
         }
         
         return { success: false, error: errorMessage };
-    }
-}
-
-
-/**
- * Updates a user's profile (displayName and photoURL) using the Admin SDK.
- * This is a Server Action designed to be called from the client.
- * It no longer returns a value, as Server Actions should be treated as void.
- * @param userId The UID of the user to update.
- * @param formData The form data containing `displayName` and optionally `photoFile`.
- * @returns An object indicating success or failure.
- */
-export async function updateUserProfile(userId: string, formData: FormData): Promise<{ success: boolean; error?: string }> {
-    if (!userId) {
-        return { success: false, error: "User ID is required." };
-    }
-
-    const displayName = formData.get('displayName') as string | null;
-    const photoFile = formData.get('photoFile') as File | null;
-    const auth = getAuth(adminApp);
-
-    try {
-        const updatePayload: { displayName?: string; photoURL?: string } = {};
-
-        // 1. If a new photo file is provided, upload it to Storage and get the URL.
-        if (photoFile && photoFile.size > 0) {
-            const photoURL = await uploadProfilePicture(userId, photoFile);
-            updatePayload.photoURL = photoURL;
-        }
-
-        // 2. Add displayName to the payload if it exists.
-        if (displayName) {
-            updatePayload.displayName = displayName;
-        }
-        
-        // 3. Update the user record in Firebase Authentication if there's anything to update.
-        if (Object.keys(updatePayload).length > 0) {
-            await auth.updateUser(userId, updatePayload);
-        }
-        
-        // 4. Revalidate paths to ensure data is fresh across the app on next server-side render.
-        revalidatePath('/profile');
-        revalidatePath('/'); // For header updates
-
-        console.log(`Successfully updated profile for user: ${userId}`);
-        return { success: true };
-
-    } catch (error: any) {
-        console.error(`Error updating profile for user ${userId}:`, error);
-        return { success: false, error: error.message || "An unknown server error occurred." };
     }
 }

@@ -24,7 +24,7 @@ import {
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { updateUserProfile as updateUserProfileServerAction } from '@/lib/user.actions'; // Import server action
+import { uploadProfilePicture } from '@/lib/firebase/storage';
 
 const auth = getAuth(app);
 
@@ -221,35 +221,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!auth.currentUser) return;
     setLoading(true);
 
-    const formData = new FormData();
-    if (data.displayName) {
-      formData.append('displayName', data.displayName);
-    }
-    if (data.photoFile) {
-      formData.append('photoFile', data.photoFile);
-    }
-
     try {
-      // Call the server action to handle the update
-      const result = await updateUserProfileServerAction(auth.currentUser.uid, formData);
-      
-      if (result.success) {
-        // Manually reload the user to get the latest profile data
-        await auth.currentUser.reload();
-        // Force a token refresh to get updated custom claims if they change
-        const idTokenResult = await auth.currentUser.getIdTokenResult(true);
+      const { displayName, photoFile } = data;
+      let photoURL = auth.currentUser.photoURL;
 
-        // Update the local user state to reflect the changes immediately
-        setUser({ ...auth.currentUser, isAdmin: idTokenResult.claims.admin === true });
-
-        toast({
-          title: "Profil Diperbarui",
-          description: "Informasi profil Anda telah berhasil diperbarui.",
-        });
-      } else {
-        // Use the error from the server action
-        throw new Error(result.error || "Gagal memperbarui profil di server.");
+      if (photoFile) {
+        photoURL = await uploadProfilePicture(auth.currentUser.uid, photoFile);
       }
+      
+      await firebaseUpdateProfile(auth.currentUser, {
+        displayName: displayName || auth.currentUser.displayName,
+        photoURL: photoURL,
+      });
+
+      // Reload user to get fresh data from Firebase servers
+      await auth.currentUser.reload();
+      const idTokenResult = await auth.currentUser.getIdTokenResult(true);
+
+      // Update the local user state to reflect changes immediately
+      setUser({ ...auth.currentUser, isAdmin: idTokenResult.claims.admin === true });
+
+      toast({
+        title: "Profil Diperbarui",
+        description: "Informasi profil Anda telah berhasil diperbarui.",
+      });
 
     } catch (error: any) {
       console.error("Error updating profile:", error);
