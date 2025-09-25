@@ -230,40 +230,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
+      // Call the server action to handle the update
       const result = await updateUserProfileServerAction(auth.currentUser.uid, formData);
       
       if (result.success) {
-        const newPhotoURL = result.photoURL || auth.currentUser.photoURL;
-        const newDisplayName = data.displayName || auth.currentUser.displayName;
-        
-        // Use client SDK to update profile for immediate UI feedback
-        await firebaseUpdateProfile(auth.currentUser, { 
-            displayName: newDisplayName, 
-            photoURL: newPhotoURL 
-        });
+        // Manually reload the user to get the latest profile data
+        await auth.currentUser.reload();
+        // Force a token refresh to get updated custom claims if they change
+        const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 
-        // Manually update the user state in the context to trigger re-renders
-        setUser(prevUser => {
-            if (!prevUser) return null;
-            // Create a new object to ensure React detects the state change
-            const updatedUser = { ...prevUser };
-            if (newDisplayName) updatedUser.displayName = newDisplayName;
-            if (newPhotoURL) updatedUser.photoURL = newPhotoURL;
-            return updatedUser as AppUser;
-        });
+        // Update the local user state to reflect the changes immediately
+        setUser({ ...auth.currentUser, isAdmin: idTokenResult.claims.admin === true });
 
         toast({
           title: "Profil Diperbarui",
           description: "Informasi profil Anda telah berhasil diperbarui.",
         });
       } else {
+        // Use the error from the server action
         throw new Error(result.error || "Gagal memperbarui profil di server.");
       }
 
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       toast({
         title: "Gagal Memperbarui Profil",
-        description: error.message,
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {

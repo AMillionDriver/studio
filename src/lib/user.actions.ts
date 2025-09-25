@@ -57,11 +57,12 @@ export async function createUser(data: CreateUserParams): Promise<{ success: boo
 /**
  * Updates a user's profile (displayName and photoURL) using the Admin SDK.
  * This is a Server Action designed to be called from the client.
+ * It no longer returns a value, as Server Actions should be treated as void.
  * @param userId The UID of the user to update.
  * @param formData The form data containing `displayName` and optionally `photoFile`.
- * @returns An object indicating success or failure with the new photo URL.
+ * @returns An object indicating success or failure.
  */
-export async function updateUserProfile(userId: string, formData: FormData): Promise<{ success: boolean; photoURL?: string; error?: string }> {
+export async function updateUserProfile(userId: string, formData: FormData): Promise<{ success: boolean; error?: string }> {
     if (!userId) {
         return { success: false, error: "User ID is required." };
     }
@@ -71,12 +72,11 @@ export async function updateUserProfile(userId: string, formData: FormData): Pro
     const auth = getAuth(adminApp);
 
     try {
-        let photoURL: string | undefined = undefined;
         const updatePayload: { displayName?: string; photoURL?: string } = {};
 
         // 1. If a new photo file is provided, upload it to Storage and get the URL.
         if (photoFile && photoFile.size > 0) {
-            photoURL = await uploadProfilePicture(userId, photoFile);
+            const photoURL = await uploadProfilePicture(userId, photoFile);
             updatePayload.photoURL = photoURL;
         }
 
@@ -95,8 +95,7 @@ export async function updateUserProfile(userId: string, formData: FormData): Pro
         revalidatePath('/'); // For header updates
 
         console.log(`Successfully updated profile for user: ${userId}`);
-        // Return success and the new photoURL so the client can update immediately.
-        return { success: true, photoURL: photoURL };
+        return { success: true };
 
     } catch (error: any) {
         console.error(`Error updating profile for user ${userId}:`, error);
