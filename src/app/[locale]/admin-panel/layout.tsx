@@ -10,28 +10,38 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-async function checkAdminStatus() {
+async function checkAdminStatus(): Promise<boolean> {
     try {
         const sessionCookie = cookies().get("__session")?.value;
+
+        // 1. Jika tidak ada cookie, pengguna pasti bukan admin.
         if (!sessionCookie) {
-            // If no cookie, definitely not an admin.
+            console.log("Admin check: No session cookie found.");
             return false;
         }
 
         const adminApp = getAdminApp();
-        // Verify the session cookie. The `true` checks for revocation.
+        
+        // 2. Verifikasi cookie sesi. Parameter kedua (true) memeriksa apakah sesi telah dicabut.
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(
             sessionCookie, 
             true
         );
         
-        // ** THE CRUCIAL FIX **
-        // Explicitly check if the 'admin' claim from the decoded token is true.
-        return decodedClaims.admin === true;
+        // 3. (LANGKAH KRITIS) Periksa secara eksplisit apakah claim 'admin' bernilai true.
+        // Ini adalah perbaikan utama.
+        const isAdmin = decodedClaims.admin === true;
 
-    } catch (error) {
-        // Any error in verification (expired, revoked, malformed cookie) means the user is not a valid admin.
-        console.error("Admin status check failed:", error);
+        if (!isAdmin) {
+            console.log("Admin check: Cookie is valid, but 'admin' claim is not true.", decodedClaims);
+        }
+
+        return isAdmin;
+
+    } catch (error: any) {
+        // 4. Tangkap semua kemungkinan error (cookie tidak valid, kedaluwarsa, dll)
+        // dan kembalikan false dengan aman.
+        console.error("Admin status check failed with error:", error.code);
         return false;
     }
 }
