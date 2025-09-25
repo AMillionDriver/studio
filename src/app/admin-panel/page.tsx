@@ -42,7 +42,6 @@ const animeFormSchema = z.object({
   coverImageUrl: z.string().url("Please enter a valid image URL."),
   genres: z.string().min(1, "At least one genre is required."),
   rating: z.string().optional(),
-  episodes: z.string().min(1, "At least one episode is required."),
   releaseDate: z.date().optional(),
 });
 
@@ -58,7 +57,6 @@ export default function AdminPanelPage() {
       coverImageUrl: "",
       genres: "",
       rating: "",
-      episodes: "",
       releaseDate: undefined,
     },
   });
@@ -162,7 +160,7 @@ export default function AdminPanelPage() {
                           <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
                           </FormControl>
                           <FormDescription>
-                              The direct link to the video stream (e.g., YouTube).
+                              The direct link to the video stream (e.g., YouTube). This will be used for Episode 1 by default.
                           </FormDescription>
                           <FormMessage />
                       </FormItem>
@@ -257,19 +255,6 @@ export default function AdminPanelPage() {
                           <FormLabel>Rating</FormLabel>
                           <FormControl>
                           <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                      </FormItem>
-                      )}
-                  />
-                  <FormField
-                      control={form.control}
-                      name="episodes"
-                      render={({ field }) => (
-                      <FormItem>
-                          <FormLabel>Episodes</FormLabel>
-                          <FormControl>
-                          <Input type="number" min="1" placeholder="e.g., 24" {...field} />
                           </FormControl>
                           <FormMessage />
                       </FormItem>

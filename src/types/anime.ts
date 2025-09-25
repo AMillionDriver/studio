@@ -46,7 +46,6 @@ export interface AnimeFormData {
     coverImageUrl: string;
     genres: string;
     rating?: string;
-    episodes: string;
     releaseDate?: Date;
 }
 

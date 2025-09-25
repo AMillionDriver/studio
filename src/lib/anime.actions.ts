@@ -11,26 +11,28 @@ const firestore = getFirestore(adminApp);
 /**
  * Adds a new anime document to Firestore using the Admin SDK.
  * This is a Server Action and should only be called from the server-side.
+ * It now also creates a default "Episode 1" for the new anime.
  * @param formData The form data from the client.
  * @returns An object indicating success or failure.
  */
 export async function addAnime(formData: AnimeFormData): Promise<{ success: boolean; docId?: string; error?: string }> {
   
-  const { title, description, streamUrl, coverImageUrl, genres, episodes, rating, releaseDate } = formData;
+  const { title, description, streamUrl, coverImageUrl, genres, rating, releaseDate } = formData;
 
-  if (!title || !description || !streamUrl || !coverImageUrl || !genres || !episodes) {
+  if (!title || !description || !streamUrl || !coverImageUrl || !genres) {
     return { success: false, error: 'Missing required fields. Please fill out all parts of the form.' };
   }
 
-  // 1. Prepare the data for Firestore
+  const batch = firestore.batch();
+
+  // 1. Create a reference for the new anime document
+  const animeRef = firestore.collection('animes').doc();
+
+  // 2. Prepare the anime data
   let animeData: Omit<Anime, 'id'>;
   try {
-    const episodesNum = parseInt(episodes, 10);
     const ratingNum = rating ? parseFloat(rating) : 0;
 
-    if (isNaN(episodesNum) || episodesNum <= 0) {
-        return { success: false, error: 'Invalid number for episodes. Must be a positive number.' };
-    }
     if (rating && isNaN(ratingNum)) {
         return { success: false, error: 'Invalid number for rating.' };
     }
@@ -42,7 +44,7 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
       coverImageUrl,
       genres: genres.split(',').map(g => g.trim()),
       rating: ratingNum,
-      episodes: episodesNum,
+      episodes: 1, // Default to 1 episode on creation
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       releaseDate: releaseDate ? Timestamp.fromDate(releaseDate) : FieldValue.serverTimestamp(),
@@ -52,15 +54,31 @@ export async function addAnime(formData: AnimeFormData): Promise<{ success: bool
       console.error('Error preparing data for Firestore: ', error);
       return { success: false, error: `Failed to prepare data: ${error.message}`};
   }
+  
+  batch.set(animeRef, animeData);
 
-  // 2. Add the document to the 'animes' collection in Firestore
+  // 3. Create a default "Episode 1" in a subcollection
+  const firstEpisodeRef = animeRef.collection('episodes').doc();
+  const firstEpisodeData = {
+      animeId: animeRef.id,
+      episodeNumber: 1,
+      title: "Episode 1", // Default title
+      videoUrl: streamUrl, // Use the main stream URL for the first episode
+      createdAt: FieldValue.serverTimestamp(),
+  };
+  batch.set(firstEpisodeRef, firstEpisodeData);
+
+
+  // 4. Commit the batch transaction
   try {
-    console.log('Attempting to add document with data using Admin SDK:', animeData);
-    const docRef = await firestore.collection('animes').add(animeData);
-    console.log('Document written with ID: ', docRef.id);
+    console.log('Attempting to add anime and first episode in a batch transaction...');
+    await batch.commit();
+    console.log('Document written with ID: ', animeRef.id);
+    
     revalidatePath('/admin-panel'); // Revalidate the admin page to show the new anime
     revalidatePath('/'); // Revalidate the home page
-    return { success: true, docId: docRef.id };
+    
+    return { success: true, docId: animeRef.id };
   } catch (error: any) {
     console.error('Error adding document to Firestore with Admin SDK: ', error);
     return { success: false, error: `Failed to save data to database: ${error.message}` };
