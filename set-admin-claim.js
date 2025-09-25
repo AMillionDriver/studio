@@ -4,14 +4,23 @@
 // --- SETUP ---
 // 1. Make sure you have Node.js installed on your computer.
 // 2. Open a terminal in your project directory.
-// 3. Run 'npm install firebase-admin' to install the required package.
-// 4. Make sure your .env file is correctly filled with your Firebase service account credentials.
+// 3. Run 'npm install firebase-admin dotenv' to install the required packages.
+// 4. IMPORTANT: Make sure your .env file is correctly filled with your Firebase service account credentials.
 
 const admin = require('firebase-admin');
 const dotenv = require('dotenv');
 
 // Load environment variables from .env file
 dotenv.config();
+
+// --- VERIFY ENVIRONMENT VARIABLES ---
+const { FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL } = process.env;
+
+if (!FIREBASE_PROJECT_ID || !FIREBASE_PRIVATE_KEY || !FIREBASE_CLIENT_EMAIL) {
+  console.error('ERROR: Missing Firebase credentials in .env file.');
+  console.error('Please ensure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL are set.');
+  process.exit(1);
+}
 
 // Get the email of the user you want to make an admin from command line arguments
 const userEmail = process.argv[2];
@@ -23,11 +32,10 @@ if (!userEmail) {
 }
 
 // --- INITIALIZE FIREBASE ADMIN SDK ---
-// IMPORTANT: Your service account key must be correctly configured in your .env file.
 const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Fix for newline characters
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  projectId: FIREBASE_PROJECT_ID,
+  privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Fix for newline characters in .env
+  clientEmail: FIREBASE_CLIENT_EMAIL,
 };
 
 try {
