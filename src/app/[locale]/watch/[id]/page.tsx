@@ -13,6 +13,7 @@ import { XIcon } from '@/components/icons/x-icon';
 import { VideoPlayer } from '@/components/video-player';
 import { Suspense } from 'react';
 import Loading from './loading';
+import { ExpandableText } from '@/components/expandable-text';
 
 async function WatchPageContent({ animeId }: { animeId: string }) {
     if (!animeId) {
@@ -70,9 +71,7 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                                 </div>
                             )}
                         </div>
-                        <CardDescription className="text-base leading-relaxed mb-6">
-                            {anime.description}
-                        </CardDescription>
+                        <ExpandableText text={anime.description} maxLength={300} />
 
                         {anime.creator && anime.creator.name && (
                             <>
