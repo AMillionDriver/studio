@@ -45,7 +45,6 @@ export function CommentForm({ animeId }: CommentFormProps) {
             setCommentText(''); // Clear textarea on success
           })
           .catch((error) => {
-            console.error("Caught permission error:", error);
             const permissionError = new FirestorePermissionError({
               path: `animes/${animeId}/comments`,
               operation: 'create',
