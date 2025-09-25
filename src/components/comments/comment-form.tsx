@@ -29,29 +29,29 @@ export function CommentForm({ animeId }: CommentFormProps) {
     event.preventDefault();
     if (!user || user.isAnonymous || !commentText.trim()) return;
 
-    startTransition(() => {
-        const commentData = {
-          text: commentText,
-          authorId: user.uid,
-          authorName: user.displayName || 'Anonymous User',
-          authorPhotoURL: user.photoURL || '',
-          createdAt: serverTimestamp(),
-        };
-        
-        const commentsCollectionRef = collection(firestore, 'animes', animeId, 'comments');
+    startTransition(async () => {
+      const commentData = {
+        text: commentText,
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous User',
+        authorPhotoURL: user.photoURL || '',
+        createdAt: serverTimestamp(),
+      };
+      
+      const commentsCollectionRef = collection(firestore, 'animes', animeId, 'comments');
 
-        addDoc(commentsCollectionRef, commentData)
-          .then(() => {
-            setCommentText(''); // Clear textarea on success
-          })
-          .catch((error) => {
-            const permissionError = new FirestorePermissionError({
-              path: `animes/${animeId}/comments`,
-              operation: 'create',
-              requestResourceData: commentData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-          });
+      try {
+        await addDoc(commentsCollectionRef, commentData);
+        setCommentText(''); // Clear textarea on success
+      } catch (error) {
+        // This is the crucial part for contextual error handling
+        const permissionError = new FirestorePermissionError({
+          path: commentsCollectionRef.path,
+          operation: 'create',
+          requestResourceData: commentData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
     });
   };
 
