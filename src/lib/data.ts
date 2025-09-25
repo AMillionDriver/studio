@@ -1,4 +1,6 @@
 
+'use server';
+
 import { getFirestore, Timestamp, FieldValue, OrderByDirection } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
