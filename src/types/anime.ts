@@ -43,10 +43,12 @@ export interface AnimeFormData {
     title: string;
     description: string;
     streamUrl: string;
-    coverImageUrl: string;
     genres: string;
     rating?: string;
     releaseDate?: Date;
+    coverImageUploadMethod: 'url' | 'upload';
+    coverImageUrl?: string;
+    coverImageFile?: FileList;
 }
 
 export interface EpisodeFormData {
