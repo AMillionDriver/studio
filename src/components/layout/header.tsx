@@ -12,17 +12,20 @@ import { Input } from '../ui/input';
 import { UserNav } from './user-nav';
 import { useAuth } from '@/hooks/use-auth';
 import { LanguageSwitcher } from './language-switcher';
+import { useI18n } from '@/app/i18n/client';
 
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/genre', label: 'Genre' },
-  { href: '/jadwal', label: 'Jadwal' },
-  { href: '/riwayat', label: 'Riwayat' },
-  { href: '/bookmark', label: 'Bookmark' },
-];
 
 export default function Header() {
   const { user } = useAuth();
+  const { t } = useI18n();
+
+  const navLinks = [
+    { href: '/', label: t('nav.home') },
+    { href: '/genre', label: t('nav.genre') },
+    { href: '/jadwal', label: t('nav.schedule') },
+    { href: '/riwayat', label: t('nav.history') },
+    { href: '/bookmark', label: t('nav.bookmark') },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -94,7 +97,7 @@ export default function Header() {
             <UserNav />
           ) : (
             <Button asChild variant="outline">
-              <Link href="/login">Login</Link>
+              <Link href="/login">{t('nav.login')}</Link>
             </Button>
           )}
         </div>

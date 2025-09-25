@@ -3,6 +3,7 @@
 
 import * as React from "react"
 import { Globe } from "lucide-react"
+import { useChangeLocale, useCurrentLocale } from '@/app/i18n/client';
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,15 +41,8 @@ const languages = [
 
 
 export function LanguageSwitcher() {
-  const [selectedLanguage, setSelectedLanguage] = React.useState("en");
-
-  // In a real app, you would use a library like next-international
-  // or next-translate to handle language changes.
-  const handleLanguageChange = (code: string) => {
-    setSelectedLanguage(code);
-    console.log(`Language changed to: ${code}`);
-    // Here you would typically call a function to change the locale.
-  };
+  const changeLocale = useChangeLocale();
+  const currentLocale = useCurrentLocale();
 
   return (
     <DropdownMenu>
@@ -65,8 +59,8 @@ export function LanguageSwitcher() {
             {languages.map((lang) => (
                 <DropdownMenuItem 
                     key={lang.code} 
-                    onClick={() => handleLanguageChange(lang.code)}
-                    disabled={selectedLanguage === lang.code}
+                    onClick={() => changeLocale(lang.code as any)}
+                    disabled={currentLocale === lang.code}
                 >
                     {lang.name}
                 </DropdownMenuItem>
