@@ -21,8 +21,10 @@ export default async function GenreSlugPage({ params }: { params: { slug: string
   }
 
   const allAnimes = await getAnimes();
+  // Normalize genre from URL and from anime data for case-insensitive matching
+  const normalizedGenre = genre.toLowerCase();
   const animesInGenre = allAnimes.filter(anime =>
-    anime.genres.map(g => g.toLowerCase()).includes(genre.toLowerCase())
+    anime.genres.map(g => g.toLowerCase()).includes(normalizedGenre)
   );
 
   return (
