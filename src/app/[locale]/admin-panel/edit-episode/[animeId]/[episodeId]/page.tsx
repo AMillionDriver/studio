@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
 
-import { getAnimeById, getEpisodeById } from '@/lib/firebase/firestore';
+import { getAnimeById, getEpisodeById } from '@/lib/data';
 import type { AnimeSerializable, EpisodeSerializable, EpisodeUpdateFormData } from '@/types/anime';
 import { updateEpisode } from '@/lib/episode.actions';
 
@@ -47,19 +47,21 @@ export default function EditEpisodePage() {
   useEffect(() => {
     if (!animeId || !episodeId) {
       setLoading(false);
-      return notFound();
+      notFound();
+      return;
     }
 
     const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const [animeData, episodeData] = await Promise.all([
           getAnimeById(animeId),
           getEpisodeById(animeId, episodeId),
         ]);
 
         if (!animeData || !episodeData) {
-          return notFound();
+          notFound();
+          return;
         }
 
         setAnime(animeData);

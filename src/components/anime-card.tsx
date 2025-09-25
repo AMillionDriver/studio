@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, PlayCircle } from 'lucide-react';
 import type { AnimeSerializable } from '@/types/anime';
 import { cn } from '@/lib/utils';
+import { getValidImageUrl } from '@/lib/utils';
 
 interface AnimeCardProps {
   anime: AnimeSerializable;
@@ -15,36 +16,8 @@ interface AnimeCardProps {
   showEpisodeNumber?: boolean;
 }
 
-const ALLOWED_HOSTNAMES = [
-    'placehold.co',
-    'images.unsplash.com',
-    'picsum.photos',
-    'encrypted-tbn0.gstatic.com',
-    'www.google.com',
-    'www.animenewsnetwork.com',
-    'za.pinterest.com',
-    'pin.it',
-    'storage.googleapis.com'
-];
-
-function getValidSrc(url: string | undefined | null): string {
-    if (!url) {
-        return 'https://placehold.co/400x600?text=No+Image';
-    }
-    try {
-        const urlObject = new URL(url);
-        if (ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
-            return url;
-        }
-    } catch (e) {
-        return 'https://placehold.co/400x600?text=Invalid+URL';
-    }
-    return 'https://placehold.co/400x600/F00/FFF?text=Host+Error&font=lato';
-}
-
-
 export function AnimeCard({ anime, className, showEpisodeNumber = false }: AnimeCardProps) {
-  const validSrc = getValidSrc(anime.coverImageUrl);
+  const validSrc = getValidImageUrl(anime.coverImageUrl);
   
   return (
     <div className={className}>

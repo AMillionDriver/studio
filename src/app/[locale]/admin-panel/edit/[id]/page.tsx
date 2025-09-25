@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { getAnimeById } from "@/lib/firebase/firestore";
+import { getAnimeById } from "@/lib/data";
 import { updateAnime } from "@/lib/anime.actions";
 import type { AnimeUpdateFormData } from "@/types/anime";
 
@@ -27,7 +27,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { XIcon } from "@/components/icons/x-icon";
-
 
 const editFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
@@ -105,7 +104,8 @@ export default function EditAnimePage() {
         setLoading(true);
         const anime = await getAnimeById(animeId);
         if (!anime) {
-          return notFound();
+          notFound();
+          return;
         }
         form.reset({
           title: anime.title || "",
@@ -169,22 +169,7 @@ export default function EditAnimePage() {
   const { isSubmitting, isDirty } = form.formState;
 
   if (loading) {
-    return (
-        <div className="container mx-auto py-10 px-4 md:px-6">
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-6 pt-6">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-32" />
-                </CardContent>
-            </Card>
-        </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
@@ -492,4 +477,26 @@ export default function EditAnimePage() {
   );
 }
 
-    
+function PageSkeleton() {
+    return (
+        <div className="container mx-auto py-10 px-4 md:px-6">
+            <Card className="max-w-3xl mx-auto">
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <Skeleton className="h-8 w-3/4 mb-2" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </div>
+                        <Skeleton className="h-9 w-32" />
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-8 pt-6">
+                    <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-24 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <Skeleton className="h-10 w-32" />
+                </CardContent>
+            </Card>
+        </div>
+    );
+}

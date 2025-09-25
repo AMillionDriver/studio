@@ -1,6 +1,5 @@
 
-import { getAnimes } from '@/lib/firebase/firestore';
-import { getI18n } from '../i18n/server';
+import { getAnimes } from '@/lib/data';
 import { Suspense } from 'react';
 import Loading from './loading';
 import { FeaturedAnimeCarousel } from '@/components/featured-anime-carousel';
@@ -8,20 +7,21 @@ import { AnimeShelf } from '@/components/anime-shelf';
 import { AnimeCard } from '@/components/anime-card';
 
 async function HomePageContent() {
-  const t = await getI18n();
 
+  // Fetch all data in parallel for maximum efficiency
   const [
     featuredAnimes, 
     latestAnimes, 
     popularAnimes, 
     allAnimes
   ] = await Promise.all([
-    getAnimes(5, 'rating', 'desc'), // For carousel, let's use popular ones
-    getAnimes(12, 'updatedAt', 'desc'),
-    getAnimes(12, 'rating', 'desc'),
-    getAnimes(30) // For the final grid
+    getAnimes(5, 'rating', 'desc'),      // For carousel, use most popular
+    getAnimes(12, 'updatedAt', 'desc'),   // For latest shelf
+    getAnimes(12, 'rating', 'desc'),      // For popular shelf
+    getAnimes(30)                         // For the main grid
   ]);
 
+  // Handle case where there is no content at all
   if (allAnimes.length === 0) {
     return (
       <div className="container mx-auto text-center py-20 px-4">
@@ -39,26 +39,32 @@ async function HomePageContent() {
       </Suspense>
       
       <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
-        <AnimeShelf title="Update Terbaru">
-          {latestAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" showEpisodeNumber={true} />
-          ))}
-        </AnimeShelf>
-        
-        <AnimeShelf title="Paling Populer">
-          {popularAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
-          ))}
-        </AnimeShelf>
-
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Semua Anime</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-            {allAnimes.map((anime) => (
-              <AnimeCard key={anime.id} anime={anime} />
+        {latestAnimes.length > 0 && (
+          <AnimeShelf title="Update Terbaru">
+            {latestAnimes.map((anime) => (
+              <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" showEpisodeNumber={true} />
             ))}
+          </AnimeShelf>
+        )}
+        
+        {popularAnimes.length > 0 && (
+          <AnimeShelf title="Paling Populer">
+            {popularAnimes.map((anime) => (
+              <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
+            ))}
+          </AnimeShelf>
+        )}
+
+        {allAnimes.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-6">Semua Anime</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+              {allAnimes.map((anime) => (
+                <AnimeCard key={anime.id} anime={anime} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   )

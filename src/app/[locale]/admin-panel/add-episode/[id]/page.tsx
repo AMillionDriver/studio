@@ -2,13 +2,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useParams, useRouter } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
 
-import { getAnimeById, getEpisodesForAnime } from '@/lib/firebase/firestore';
+import { getAnimeById, getEpisodesForAnime } from '@/lib/data';
 import type { AnimeSerializable, EpisodeFormData, EpisodeSerializable } from '@/types/anime';
 import { addEpisodeToAnime, deleteEpisode } from '@/lib/episode.actions';
 
@@ -48,38 +48,40 @@ export default function AddEpisodePage() {
 
   const animeId = typeof params.id === 'string' ? params.id : '';
 
-  useEffect(() => {
+  const fetchAndSetData = async () => {
     if (!animeId) {
-      setLoading(false);
-      notFound();
-      return;
+        setLoading(false);
+        notFound();
+        return;
     }
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    setLoading(true);
+    try {
         const [animeData, episodesData] = await Promise.all([
-          getAnimeById(animeId),
-          getEpisodesForAnime(animeId),
+            getAnimeById(animeId),
+            getEpisodesForAnime(animeId),
         ]);
         
         if (!animeData) {
-          return notFound();
+            notFound();
+            return;
         }
         setAnime(animeData);
         setEpisodes(episodesData);
+        // Automatically set the next episode number in the form
         form.setValue('episodeNumber', (episodesData.length + 1).toString());
 
-      } catch (error) {
+    } catch (error) {
         console.error('Failed to fetch data:', error);
         toast({ title: 'Error', description: 'Could not load anime and episode data.', variant: 'destructive' });
-      } finally {
+    } finally {
         setLoading(false);
-      }
-    };
+    }
+  };
 
-    fetchData();
-  }, [animeId, toast, form]);
+  useEffect(() => {
+    fetchAndSetData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animeId]);
   
   const onSubmit = async (data: EpisodeFormData) => {
     if (!animeId) return;
@@ -89,10 +91,8 @@ export default function AddEpisodePage() {
     if (result.success) {
       toast({ title: 'Success', description: 'New episode has been added.' });
       form.reset();
-      // Refresh episode list
-      const updatedEpisodes = await getEpisodesForAnime(animeId);
-      setEpisodes(updatedEpisodes);
-      form.setValue('episodeNumber', (updatedEpisodes.length + 1).toString());
+      // Refresh episode list after adding a new one
+      await fetchAndSetData();
     } else {
       toast({ title: 'Error', description: result.error || 'Failed to add episode.', variant: 'destructive' });
     }
@@ -107,9 +107,8 @@ export default function AddEpisodePage() {
             title: 'Episode Deleted',
             description: 'The episode has been successfully removed.',
         });
-        const updatedEpisodes = await getEpisodesForAnime(animeId);
-        setEpisodes(updatedEpisodes);
-        form.setValue('episodeNumber', (updatedEpisodes.length + 1).toString());
+        // Refresh episode list after deletion
+        await fetchAndSetData();
     } else {
         toast({
             title: 'Error',

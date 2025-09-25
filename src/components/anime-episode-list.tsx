@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getEpisodesForAnime } from '@/lib/firebase/firestore';
+import { getEpisodesForAnime } from '@/lib/data';
 import type { EpisodeSerializable } from '@/types/anime';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -24,12 +24,13 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!animeId) return;
-
-    const fetchEpisodes = async () => {
+  const fetchEpisodes = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
+        if (!animeId) {
+            setError("Anime ID is missing.");
+            return;
+        };
         const episodeData = await getEpisodesForAnime(animeId);
         setEpisodes(episodeData);
         setError(null);
@@ -41,7 +42,9 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
       }
     };
 
+  useEffect(() => {
     fetchEpisodes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animeId]);
 
   const handleDelete = async (episodeId: string) => {
@@ -51,7 +54,8 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
             title: 'Episode Deleted',
             description: 'The episode has been successfully removed.',
         });
-        setEpisodes(prev => prev.filter(ep => ep.id !== episodeId));
+        // Refetch to get the updated list
+        await fetchEpisodes();
     } else {
         toast({
             title: 'Error',
@@ -66,6 +70,7 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
       <div className="p-4 space-y-2">
         <Skeleton className="h-8 w-full" />
         <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-8 w-full" />
       </div>
     );
   }
@@ -80,7 +85,7 @@ export function AnimeEpisodeList({ animeId }: AnimeEpisodeListProps) {
 
   return (
     <div className="p-4">
-      <h4 className="font-semibold mb-2">Episode List</h4>
+      <h4 className="font-semibold mb-2">Episode List ({episodes.length})</h4>
       <div className="border rounded-lg">
         <Table>
           <TableHeader>

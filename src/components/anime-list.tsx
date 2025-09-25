@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAnimes } from "@/lib/firebase/firestore";
+import { getAnimes } from "@/lib/data";
 import type { AnimeSerializable } from "@/types/anime";
 import {
   Table,
@@ -40,11 +40,10 @@ export function AnimeList() {
   const [openCollapsibleId, setOpenCollapsibleId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchAnimes = async () => {
+  const fetchAnimes = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const animeData = await getAnimes();
+        const animeData = await getAnimes(undefined, 'updatedAt', 'desc'); // Sort by most recently updated
         setAnimes(animeData);
         setError(null);
       } catch (err) {
@@ -54,6 +53,8 @@ export function AnimeList() {
         setLoading(false);
       }
     };
+
+  useEffect(() => {
     fetchAnimes();
   }, []);
 
@@ -80,6 +81,8 @@ export function AnimeList() {
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
       </div>
     );
   }
@@ -89,7 +92,7 @@ export function AnimeList() {
   }
 
   if (animes.length === 0) {
-    return <p className="text-muted-foreground">No anime has been uploaded yet.</p>;
+    return <p className="text-muted-foreground text-center py-4">No anime has been uploaded yet. Start by adding one!</p>;
   }
 
   return (
@@ -112,12 +115,12 @@ export function AnimeList() {
             onOpenChange={() => setOpenCollapsibleId(prevId => prevId === anime.id ? null : anime.id)}
           >
             <TableBody className="border-b">
-              <TableRow>
+              <TableRow className="data-[state=open]:bg-muted/50">
                 <TableCell>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="icon" className="w-9 p-0 data-[state=open]:rotate-180">
                       <ChevronDown className="h-4 w-4" />
-                      <span className="sr-only">Toggle episodes</span>
+                      <span className="sr-only">Toggle episodes for {anime.title}</span>
                     </Button>
                   </CollapsibleTrigger>
                 </TableCell>
@@ -153,7 +156,7 @@ export function AnimeList() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete <strong className="mx-1">{anime.title}</strong> from the database.
+                          This action cannot be undone. This will permanently delete <strong className="mx-1">{anime.title}</strong> and all its episodes from the database.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -172,7 +175,7 @@ export function AnimeList() {
               <CollapsibleContent asChild>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
                   <TableCell colSpan={5}>
-                    <AnimeEpisodeList animeId={anime.id} />
+                    {openCollapsibleId === anime.id && <AnimeEpisodeList animeId={anime.id} />}
                   </TableCell>
                 </TableRow>
               </CollapsibleContent>
