@@ -17,7 +17,7 @@ async function HomePageContent() {
     allAnimes
   ] = await Promise.all([
     getAnimes(5, 'rating', 'desc'), // For carousel, let's use popular ones
-    getAnimes(12, 'createdAt', 'desc'),
+    getAnimes(12, 'updatedAt', 'desc'),
     getAnimes(12, 'rating', 'desc'),
     getAnimes(30) // For the final grid
   ]);
@@ -41,7 +41,7 @@ async function HomePageContent() {
       <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
         <AnimeShelf title="Update Terbaru">
           {latestAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
+            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" showEpisodeNumber={true} />
           ))}
         </AnimeShelf>
         
