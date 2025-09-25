@@ -5,23 +5,16 @@ import { getAnimeById, getAnimes, getEpisodesForAnime } from '@/lib/firebase/fir
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Tv, Calendar, Clapperboard, Layers, VenetianMask, Youtube, Instagram, Facebook } from 'lucide-react';
+import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook } from 'lucide-react';
 import { RecommendedAnime } from '@/components/recommended-anime';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { AnimeSerializable, EpisodeSerializable } from '@/types/anime';
-import { Skeleton } from '@/components/ui/skeleton';
 import { EpisodeSelector } from '@/components/episode-selector';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { XIcon } from '@/components/icons/x-icon';
-
-
-interface WatchPageProps {
-  params: {
-    id: string;
-  };
-}
+import Loading from './loading';
 
 // Helper to convert YouTube URL to embeddable format
 function getEmbedUrl(url: string): string | null {
@@ -95,11 +88,11 @@ export default function WatchPage() {
     setCurrentEpisode(episode);
   };
   
-  const videoUrlToPlay = currentEpisode?.videoUrl || anime?.streamUrl || '';
-  const embedUrl = getEmbedUrl(videoUrlToPlay);
+  const videoUrlToPlay = useMemo(() => currentEpisode?.videoUrl || anime?.streamUrl || '', [currentEpisode, anime]);
+  const embedUrl = useMemo(() => getEmbedUrl(videoUrlToPlay), [videoUrlToPlay]);
 
   if (loading) {
-    return <WatchPageSkeleton />;
+    return <Loading />;
   }
 
   if (!anime) {
@@ -161,10 +154,12 @@ export default function WatchPage() {
                     <Clapperboard className="h-4 w-4" />
                     <span>{anime.episodes} Episodes</span>
                  </div>
-                 <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(anime.createdAt).getFullYear()}</span>
-                 </div>
+                 {anime.releaseDate && (
+                  <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(anime.releaseDate).getFullYear()}</span>
+                  </div>
+                 )}
               </div>
               <CardDescription className="text-base leading-relaxed mb-6">
                 {anime.description}
@@ -232,43 +227,6 @@ export default function WatchPage() {
         {/* Recommended Anime Sidebar */}
         <div className="lg:col-span-1">
              <RecommendedAnime animes={recommendedAnimes} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WatchPageSkeleton() {
-  return (
-    <div className="container mx-auto py-8 px-4 md:px-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Skeleton className="aspect-video w-full rounded-lg" />
-          <Card className="mt-6">
-            <CardHeader>
-              <Skeleton className="h-9 w-3/4" />
-              <Skeleton className="h-5 w-1/2 mt-2" />
-              <div className="flex gap-2 mt-4">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-6 w-20" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-6 mb-4">
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-5 w-24" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:col-span-1">
-          <Skeleton className="h-[500px] w-full" />
         </div>
       </div>
     </div>
