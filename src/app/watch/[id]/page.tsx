@@ -39,8 +39,10 @@ function getEmbedUrl(url: string): string | null {
   }
 }
 
-export default function WatchPage({ params }: WatchPageProps) {
-  const animeId = params.id;
+export default function WatchPage() {
+  const params = useParams();
+  const animeId = typeof params.id === 'string' ? params.id : '';
+  
   const [anime, setAnime] = useState<AnimeSerializable | null>(null);
   const [episodes, setEpisodes] = useState<EpisodeSerializable[]>([]);
   const [recommendedAnimes, setRecommendedAnimes] = useState<AnimeSerializable[]>([]);
