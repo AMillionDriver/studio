@@ -35,7 +35,7 @@ async function HomePageContent() {
 
   return (
     <>
-      <Suspense fallback={<div className="w-full aspect-[16/7] bg-muted animate-pulse" />}>
+      <Suspense fallback={<div className="w-full aspect-video md:aspect-[16/7] bg-muted animate-pulse" />}>
         <FeaturedAnimeCarousel animes={featuredAnimes} />
       </Suspense>
       
@@ -43,24 +43,24 @@ async function HomePageContent() {
 
       <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
         {latestAnimes.length > 0 && (
-          <AnimeShelf title="Update Terbaru">
+          <AnimeShelf title="Baru Ditambahkan">
             {latestAnimes.map((anime) => (
-              <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" showEpisodeNumber={true} />
+              <AnimeCard key={anime.id} anime={anime} className="w-[150px] md:w-[180px] flex-shrink-0" showEpisodeNumber={true} />
             ))}
           </AnimeShelf>
         )}
         
         {popularAnimes.length > 0 && (
-          <AnimeShelf title="Paling Populer">
+          <AnimeShelf title="Populer Musim Ini">
             {popularAnimes.map((anime) => (
-              <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
+              <AnimeCard key={anime.id} anime={anime} className="w-[150px] md:w-[180px] flex-shrink-0" />
             ))}
           </AnimeShelf>
         )}
 
         {allAnimes.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold tracking-tight mb-6">Semua Anime</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-6">Jelajahi Semua Anime</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
               {allAnimes.map((anime) => (
                 <AnimeCard key={anime.id} anime={anime} />

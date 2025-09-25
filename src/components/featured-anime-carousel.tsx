@@ -46,7 +46,7 @@ export function FeaturedAnimeCarousel({ animes }: FeaturedAnimeCarouselProps) {
         <CarouselContent>
           {animes.map((anime) => (
             <CarouselItem key={anime.id}>
-              <div className="relative aspect-[16/7] w-full">
+              <div className="relative aspect-video md:aspect-[16/7] w-full">
                 <Image
                   src={anime.coverImageUrl || 'https://placehold.co/1280x720?text=Anime'}
                   alt={anime.title}
@@ -54,24 +54,25 @@ export function FeaturedAnimeCarousel({ animes }: FeaturedAnimeCarouselProps) {
                   className="object-cover"
                   priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex items-center">
-                  <div className="max-w-2xl text-white p-8 md:p-12 lg:p-16 space-y-4">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-lg !leading-tight">
+                  <div className="max-w-xl text-foreground p-8 md:p-12 lg:p-16 space-y-4">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight !leading-tight">
                       {anime.title}
                     </h1>
                     <div className="flex flex-wrap gap-2">
                         {anime.genres.slice(0,3).map(genre => (
-                            <Badge key={genre} variant="secondary" className="backdrop-blur-sm bg-white/20 border-white/30">{genre}</Badge>
+                            <Badge key={genre} variant="secondary" className="backdrop-blur-sm">{genre}</Badge>
                         ))}
                     </div>
-                    <p className="mt-2 text-md md:text-lg line-clamp-3 leading-relaxed text-neutral-200 drop-shadow-md">
+                    <p className="mt-2 text-md md:text-lg line-clamp-3 leading-relaxed text-muted-foreground">
                       {anime.description}
                     </p>
                     <Button asChild className="mt-6" size="lg">
                       <Link href={`/watch/${anime.id}`}>
                         <PlayCircle className="mr-2 h-5 w-5"/>
-                        Watch Now
+                        Tonton Sekarang
                       </Link>
                     </Button>
                   </div>

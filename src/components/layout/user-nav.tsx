@@ -41,16 +41,16 @@ export function UserNav() {
   const legalLinks = [
     { href: "/dmca", label: "DMCA", icon: Gavel },
     { href: "/eula", label: "EULA", icon: FileText },
-    { href: "/policy", label: "Privacy Policy", icon: Shield },
-    { href: "/security", label: "Security", icon: Lock },
+    { href: "/policy", label: "Privacy Policy", icon: Lock },
+    { href: "/security", label: "Security", icon: Shield },
     { href: "/about", label: "About Us", icon: Info },
   ];
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <Avatar className="h-9 w-9">
             <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
             <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
           </Avatar>
@@ -98,7 +98,7 @@ export function UserNav() {
         </div>
 
         <SheetFooter className="p-6 pt-4 mt-auto border-t">
-          <Button onClick={signOut} variant="outline" className="w-full justify-start">
+          <Button onClick={signOut} variant="outline" className="w-full">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </Button>
