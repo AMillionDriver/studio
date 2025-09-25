@@ -9,7 +9,7 @@ import Header from '@/components/layout/header';
 import { AuthProvider } from '@/contexts/auth-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
-import { I18nProvider } from '../i18n-provider';
+import { I18nProviderClient } from '../i18n/client';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -41,13 +41,13 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
 export default function LocaleLayout({
   children,
-  params
+  params: { locale }
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string }
 }>) {
   return (
-    <I18nProvider locale={params.locale}>
+    <I18nProviderClient locale={locale}>
       <div className={`${inter.variable} font-body antialiased`}>
         <ThemeProvider
           attribute="class"
@@ -62,6 +62,6 @@ export default function LocaleLayout({
           </AuthProvider>
         </ThemeProvider>
       </div>
-    </I18nProvider>
+    </I18nProviderClient>
   );
 }
