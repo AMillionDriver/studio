@@ -64,22 +64,3 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
     );
 }
-
-// Create placeholder pages for new routes
-export function AnalyticsPage() {
-    return (
-        <div>
-            <h1 className="text-2xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground">This page is under construction.</p>
-        </div>
-    );
-}
-
-export function SettingsPage() {
-    return (
-         <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-muted-foreground">This page is under construction.</p>
-        </div>
-    );
-}
