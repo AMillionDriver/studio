@@ -52,19 +52,20 @@ export function FeaturedAnimeCarousel({ animes }: FeaturedAnimeCarouselProps) {
                   alt={anime.title}
                   fill
                   className="object-cover"
+                  priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-start">
-                  <div className="max-w-xl text-white p-8 md:p-12 lg:p-16">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+                <div className="absolute inset-0 flex items-center">
+                  <div className="max-w-2xl text-white p-8 md:p-12 lg:p-16 space-y-4">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-lg !leading-tight">
                       {anime.title}
                     </h1>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                         {anime.genres.slice(0,3).map(genre => (
                             <Badge key={genre} variant="secondary" className="backdrop-blur-sm bg-white/20 border-white/30">{genre}</Badge>
                         ))}
                     </div>
-                    <p className="mt-4 text-md md:text-lg line-clamp-3 leading-relaxed text-neutral-200 drop-shadow-md">
+                    <p className="mt-2 text-md md:text-lg line-clamp-3 leading-relaxed text-neutral-200 drop-shadow-md">
                       {anime.description}
                     </p>
                     <Button asChild className="mt-6" size="lg">

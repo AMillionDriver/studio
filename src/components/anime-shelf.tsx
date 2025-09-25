@@ -11,11 +11,10 @@ interface AnimeShelfProps {
 export function AnimeShelf({ title, children }: AnimeShelfProps) {
   return (
     <section>
-      <h2 className="text-2xl font-bold tracking-tight mb-4">{title}</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-6">{title}</h2>
       <div className="relative">
         <ScrollArea>
-          <div className="flex space-x-4 pb-4">
-            {/* The children will be the AnimeCard components */}
+          <div className="flex space-x-4 md:space-x-6 pb-4">
             {children}
           </div>
           <ScrollBar orientation="horizontal" />

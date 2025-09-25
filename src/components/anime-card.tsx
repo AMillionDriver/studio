@@ -47,7 +47,7 @@ export function AnimeCard({ anime, className }: AnimeCardProps) {
   return (
     <div className={className}>
         <Link href={`/watch/${anime.id}`} className="group block h-full">
-        <Card className="overflow-hidden h-full transition-all duration-300 ease-in-out hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
+        <Card className="overflow-hidden h-full transition-all duration-300 ease-in-out bg-card hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1">
             <CardContent className="p-0">
             <div className="relative aspect-[2/3] w-full">
                 <Image
@@ -60,24 +60,20 @@ export function AnimeCard({ anime, className }: AnimeCardProps) {
                 {anime.rating && anime.rating > 0 ? (
                 <Badge 
                     variant="destructive" 
-                    className="absolute top-2 right-2 flex items-center gap-1"
-                    style={{
-                        backgroundColor: 'rgba(0,0,0,0.7)',
-                        borderColor: 'rgba(255,255,255,0.2)'
-                    }}
+                    className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 border-white/20 text-white"
                 >
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>{anime.rating.toFixed(1)}</span>
+                    <span className="font-semibold">{anime.rating.toFixed(1)}</span>
                 </Badge>
                 ) : null}
             </div>
-            <div className="p-3 space-y-1">
-                <h3 className="font-semibold text-sm truncate group-hover:text-primary" title={anime.title}>
+            <div className="p-3 space-y-1.5">
+                <h3 className="font-bold text-base truncate group-hover:text-primary transition-colors" title={anime.title}>
                 {anime.title}
                 </h3>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                 {anime.genres.slice(0, 2).map((genre) => (
-                    <Badge key={genre} variant="secondary" className="text-xs">
+                    <Badge key={genre} variant="secondary" className="text-xs font-medium">
                     {genre}
                     </Badge>
                 ))}

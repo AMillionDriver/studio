@@ -16,7 +16,7 @@ async function HomePageContent() {
     popularAnimes, 
     allAnimes
   ] = await Promise.all([
-    getAnimes(8, 'rating', 'desc'), // For carousel, let's use popular ones
+    getAnimes(5, 'rating', 'desc'), // For carousel, let's use popular ones
     getAnimes(12, 'createdAt', 'desc'),
     getAnimes(12, 'rating', 'desc'),
     getAnimes(30) // For the final grid
@@ -24,9 +24,10 @@ async function HomePageContent() {
 
   if (allAnimes.length === 0) {
     return (
-      <div className="text-center py-20">
-        <p className="text-muted-foreground text-lg">No anime has been added yet.</p>
-        <p className="text-sm text-muted-foreground">Use the Admin Panel to upload new anime series.</p>
+      <div className="container mx-auto text-center py-20 px-4">
+        <h2 className="text-2xl font-bold mb-2">No Anime Found</h2>
+        <p className="text-muted-foreground text-lg">It looks like no anime has been added yet.</p>
+        <p className="text-sm text-muted-foreground mt-2">Please use the Admin Panel to upload new anime series.</p>
       </div>
     );
   }
@@ -37,28 +38,27 @@ async function HomePageContent() {
         <FeaturedAnimeCarousel animes={featuredAnimes} />
       </Suspense>
       
-      <div className="container mx-auto py-8 px-4 md:px-6 space-y-12">
+      <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
         <AnimeShelf title="Update Terbaru">
           {latestAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} />
+            <AnimeCard key={anime.id} anime={anime} className="min-w-[160px] md:min-w-[200px]" />
           ))}
         </AnimeShelf>
         
         <AnimeShelf title="Paling Populer">
           {popularAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} />
+            <AnimeCard key={anime.id} anime={anime} className="min-w-[160px] md:min-w-[200px]" />
           ))}
         </AnimeShelf>
 
         <div>
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Semua Anime</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">Semua Anime</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
             {allAnimes.map((anime) => (
               <AnimeCard key={anime.id} anime={anime} />
             ))}
           </div>
         </div>
-
       </div>
     </>
   )
@@ -66,7 +66,7 @@ async function HomePageContent() {
 
 export default async function Home() {
   return (
-    <main className="flex flex-col">
+    <main className="flex flex-col bg-background">
       <Suspense fallback={<Loading />}>
         <HomePageContent />
       </Suspense>
