@@ -2,12 +2,12 @@
 'use server';
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { adminApp } from './firebase/admin-sdk';
+import { getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeRating } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
 
-const firestore = getFirestore(adminApp);
+const firestore = getFirestore(getAdminApp());
 
 /**
  * Adds a new anime document to Firestore using the Admin SDK.

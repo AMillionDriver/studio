@@ -2,11 +2,11 @@
 'use server';
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { adminApp } from './firebase/admin-sdk';
+import { getAdminApp } from './firebase/admin-sdk';
 import type { EpisodeFormData, EpisodeUpdateFormData } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 
-const firestore = getFirestore(adminApp);
+const firestore = getFirestore(getAdminApp());
 
 /**
  * Adds a new episode to an anime's subcollection in Firestore.

@@ -1,5 +1,7 @@
 
-import { initializeApp, getApps, App, cert, getApp } from "firebase-admin/app";
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+
+let _app: App | null = null;
 
 // IMPORTANT: You must provide your own service account credentials.
 // Download your service account JSON file from the Firebase console:
@@ -16,12 +18,22 @@ const serviceAccount = {
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
-function getAdminApp(): App {
-  // Check if the default app is already initialized
-  if (getApps().some(app => app.name === '[DEFAULT]')) {
-    return getApp();
+/**
+ * Initializes and/or returns the Firebase Admin App instance.
+ * This "lazy" initialization prevents the SDK from being initialized
+ * in client-side bundles.
+ */
+export function getAdminApp(): App {
+  if (_app) {
+    return _app;
   }
 
+  // Check if the default app is already initialized
+  if (getApps().some(app => app.name === '[DEFAULT]')) {
+    _app = getApps().find(app => app.name === '[DEFAULT]')!;
+    return _app;
+  }
+  
   // Ensure all required service account properties are present
   if (
     !serviceAccount.projectId ||
@@ -29,14 +41,14 @@ function getAdminApp(): App {
     !serviceAccount.clientEmail
   ) {
     throw new Error(
-      "Firebase service account credentials are not set in environment variables. Please check your .env.local file."
+      "Firebase service account credentials are not set in environment variables. Please check your .env file."
     );
   }
 
   // Initialize the Firebase Admin SDK
-  return initializeApp({
+  _app = initializeApp({
     credential: cert(serviceAccount),
   });
-}
 
-export const adminApp = getAdminApp();
+  return _app;
+}

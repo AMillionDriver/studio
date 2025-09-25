@@ -1,10 +1,10 @@
 
 import { getFirestore, Timestamp, FieldValue, OrderByDirection } from 'firebase-admin/firestore';
-import { adminApp } from './firebase/admin-sdk';
+import { getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
 
 // Use the Admin SDK's firestore instance
-const firestore = getFirestore(adminApp);
+const firestore = getFirestore(getAdminApp());
 
 /**
  * Converts a Firestore document snapshot from the Admin SDK to a serializable Anime object.

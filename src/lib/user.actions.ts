@@ -2,7 +2,7 @@
 'use server';
 
 import { getAuth } from "firebase-admin/auth";
-import { adminApp } from "@/lib/firebase/admin-sdk";
+import { getAdminApp } from "@/lib/firebase/admin-sdk";
 
 interface CreateUserParams {
     email: string;
@@ -25,7 +25,7 @@ export async function createUser(data: CreateUserParams): Promise<{ success: boo
     }
 
     try {
-        const auth = getAuth(adminApp);
+        const auth = getAuth(getAdminApp());
         
         const userRecord = await auth.createUser({
             email: email,

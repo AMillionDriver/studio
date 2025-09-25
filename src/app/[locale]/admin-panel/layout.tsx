@@ -3,7 +3,7 @@ import { Sidebar, SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { ReactNode } from "react";
 import { getAuth } from "firebase-admin/auth";
-import { adminApp } from "@/lib/firebase/admin-sdk";
+import { getAdminApp } from "@/lib/firebase/admin-sdk";
 import { cookies } from "next/headers";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
@@ -16,6 +16,7 @@ async function checkAdminStatus() {
         return false;
     }
     try {
+        const adminApp = getAdminApp();
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
         return decodedClaims.admin === true;
     } catch (error) {

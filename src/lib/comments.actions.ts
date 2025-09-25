@@ -2,13 +2,13 @@
 'use server';
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { adminApp } from '@/lib/firebase/admin-sdk';
+import { getAdminApp } from '@/lib/firebase/admin-sdk';
 import { revalidatePath } from 'next/cache';
 import { getAuth } from 'firebase-admin/auth';
 import type { Comment } from '@/types/anime';
 
-const firestore = getFirestore(adminApp);
-const auth = getAuth(adminApp);
+const firestore = getFirestore(getAdminApp());
+const auth = getAuth(getAdminApp());
 
 // This server action is kept for potential future use where admin-level operations might be needed.
 // The primary comment submission logic has been moved to the client for detailed error handling.
