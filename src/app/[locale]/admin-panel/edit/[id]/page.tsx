@@ -108,14 +108,14 @@ export default function EditAnimePage() {
           return notFound();
         }
         form.reset({
-          title: anime.title,
-          description: anime.description,
-          streamUrl: anime.streamUrl,
-          genres: anime.genres.join(', '),
+          title: anime.title || "",
+          description: anime.description || "",
+          streamUrl: anime.streamUrl || "",
+          genres: anime.genres.join(', ') || "",
           rating: anime.rating?.toString() || "",
           releaseDate: anime.releaseDate ? new Date(anime.releaseDate) : undefined,
           coverImageUploadMethod: 'url',
-          coverImageUrl: anime.coverImageUrl,
+          coverImageUrl: anime.coverImageUrl || "",
           creatorName: anime.creator?.name || "",
           creatorYoutube: anime.creator?.socials?.youtube || "",
           creatorInstagram: anime.creator?.socials?.instagram || "",
@@ -219,7 +219,7 @@ export default function EditAnimePage() {
                   <FormItem>
                     <FormLabel>Anime Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Attack on Titan" {...field} />
+                      <Input placeholder="e.g., Attack on Titan" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,6 +237,7 @@ export default function EditAnimePage() {
                         placeholder="A brief synopsis of the anime..."
                         className="resize-y min-h-[120px]"
                         {...field}
+                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -329,7 +330,7 @@ export default function EditAnimePage() {
                     <FormItem>
                         <FormLabel>Streaming URL</FormLabel>
                         <FormControl>
-                        <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
+                        <Input placeholder="https://www.youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormDescription>
                             The direct link to the main video stream.
@@ -410,7 +411,7 @@ export default function EditAnimePage() {
                     <FormItem>
                         <FormLabel>Genres</FormLabel>
                         <FormControl>
-                        <Input placeholder="Action, Drama, Fantasy" {...field} />
+                        <Input placeholder="Action, Drama, Fantasy" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormDescription>
                             Comma-separated list of genres.
@@ -490,3 +491,5 @@ export default function EditAnimePage() {
     </div>
   );
 }
+
+    
