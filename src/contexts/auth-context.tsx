@@ -239,9 +239,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         photoURL: photoURL
       });
 
-      // The onAuthStateChanged listener will automatically pick up the changes.
-      // No need to manually call setUser here, which was causing the infinite loop.
-
+      // The onAuthStateChanged listener will automatically pick up the changes and update the user state.
+      // This prevents the infinite reload loop.
+      
       toast({
         title: "Profil Diperbarui",
         description: "Informasi profil Anda telah berhasil diperbarui.",
@@ -254,6 +254,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
     } finally {
+      // This ensures the loading skeleton is removed, whether the update succeeds or fails.
       setLoading(false);
     }
   };
