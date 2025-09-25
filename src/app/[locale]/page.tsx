@@ -41,13 +41,13 @@ async function HomePageContent() {
       <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
         <AnimeShelf title="Update Terbaru">
           {latestAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} className="min-w-[160px] md:min-w-[200px]" />
+            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
           ))}
         </AnimeShelf>
         
         <AnimeShelf title="Paling Populer">
           {popularAnimes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} className="min-w-[160px] md:min-w-[200px]" />
+            <AnimeCard key={anime.id} anime={anime} className="w-40 flex-shrink-0" />
           ))}
         </AnimeShelf>
 
