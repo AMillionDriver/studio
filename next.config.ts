@@ -46,6 +46,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.animenewsnetwork.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'za.pinterest.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
