@@ -24,7 +24,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { createUser } from "@/lib/user.actions";
-import { UserPlus } from "lucide-react";
 
 const createUserFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -70,22 +69,22 @@ export default function CreateUserPage() {
   };
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <Card className="max-w-xl mx-auto">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
+        <p className="text-muted-foreground">Create and manage users and their roles.</p>
+      </div>
+
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <UserPlus className="h-8 w-8 text-primary" />
-            <div>
-              <CardTitle className="text-2xl">Create New User</CardTitle>
-              <CardDescription>
-                Create a new user account for the platform. You can later assign roles.
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle>Create New User</CardTitle>
+          <CardDescription>
+            Create a new user account for the platform. You can later assign roles.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-lg">
               <FormField
                 control={form.control}
                 name="email"
