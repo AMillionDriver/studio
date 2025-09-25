@@ -21,6 +21,10 @@ const normalizeGenre = (genre: string) => {
     return genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
 
+const genreAliases: Record<string, string[]> = {
+    fantasi: ['fantasy'],
+};
+
 export default async function GenreSlugPage({ params }: { params: { slug: string } }) {
   const genre = decodeURIComponent(params.slug);
   if (!genre) {
@@ -28,10 +32,13 @@ export default async function GenreSlugPage({ params }: { params: { slug: string
   }
 
   const allAnimes = await getAnimes();
-  // Normalize genre from URL and from anime data for case-insensitive and diacritic-insensitive matching
+  
   const normalizedGenreSlug = normalizeGenre(genre);
+  const aliases = genreAliases[normalizedGenreSlug] || [];
+  const validGenres = new Set([normalizedGenreSlug, ...aliases]);
+
   const animesInGenre = allAnimes.filter(anime =>
-    anime.genres.map(g => normalizeGenre(g)).includes(normalizedGenreSlug)
+    anime.genres.some(g => validGenres.has(normalizeGenre(g)))
   );
 
   return (

@@ -1,5 +1,4 @@
 
-
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import {
@@ -82,6 +81,10 @@ const normalizeGenre = (genre: string) => {
     return genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
 
+const genreAliases: Record<string, string[]> = {
+    fantasi: ['fantasy'],
+};
+
 
 function getGenreIcon(genre: string) {
     const iconKey = normalizeGenre(genre);
@@ -93,7 +96,10 @@ function GenreGrid({ genres, availableGenres }: { genres: string[], availableGen
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {genres.map(genre => {
-              const isAvailable = availableGenres.has(normalizeGenre(genre));
+              const normalizedGenre = normalizeGenre(genre);
+              const aliases = genreAliases[normalizedGenre] || [];
+              const isAvailable = availableGenres.has(normalizedGenre) || aliases.some(alias => availableGenres.has(alias));
+
               const cardContent = (
                 <Card 
                   className={cn(
