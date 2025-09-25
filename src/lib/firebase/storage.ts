@@ -3,8 +3,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './sdk';
 
 export async function uploadProfilePicture(userId: string, file: File): Promise<string> {
-  // Create a storage reference
-  const storageRef = ref(storage, `profile-pictures/${userId}/${file.name}`);
+  // Create a storage reference with a unique name
+  const storageRef = ref(storage, `profile-pictures/${userId}/${Date.now()}`);
 
   try {
     // Upload the file
