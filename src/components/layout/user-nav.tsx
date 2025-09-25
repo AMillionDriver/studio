@@ -6,7 +6,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
   SheetClose
 } from "@/components/ui/sheet";
@@ -33,8 +32,12 @@ export function UserNav() {
     return initials.toUpperCase().slice(0, 2);
   }
 
-  const generalLinks = [
+  const mainLinks = [
+    { href: "/profile", label: "Profile", icon: UserIcon },
     { href: "/settings", label: "Settings", icon: Settings },
+  ];
+
+  const legalLinks = [
     { href: "/dmca", label: "DMCA", icon: Gavel },
     { href: "/eula", label: "EULA", icon: FileText },
     { href: "/policy", label: "Privacy Policy", icon: Shield },
@@ -68,17 +71,21 @@ export function UserNav() {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6">
-            <nav className="flex flex-col gap-2">
-                <SheetClose asChild>
-                    <Link href="/profile" className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium hover:bg-accent">
-                        <UserIcon className="h-5 w-5 text-muted-foreground" />
-                        <span>Profile</span>
-                    </Link>
-                </SheetClose>
+            <nav className="flex flex-col gap-1">
+                {mainLinks.map(link => (
+                    <SheetClose asChild key={link.href}>
+                        <Link href={link.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium hover:bg-accent">
+                            <link.icon className="h-5 w-5 text-muted-foreground" />
+                            <span>{link.label}</span>
+                        </Link>
+                    </SheetClose>
+                ))}
 
                 <Separator className="my-2" />
                 
-                {generalLinks.map(link => (
+                <p className="px-3 text-xs font-semibold text-muted-foreground/80 tracking-wider uppercase">Lainnya</p>
+
+                {legalLinks.map(link => (
                     <SheetClose asChild key={link.href}>
                          <Link href={link.href} className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
                             <link.icon className="h-5 w-5" />
@@ -99,5 +106,3 @@ export function UserNav() {
     </Sheet>
   );
 }
-
-    
