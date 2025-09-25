@@ -13,11 +13,18 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AnimeRating } from "@/types/anime";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ratings: AnimeRating[] = ["G", "PG", "PG-13", "R", "NC-17"];
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <div className="container mx-auto max-w-2xl py-10 space-y-8">
@@ -39,27 +46,35 @@ export default function SettingsPage() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label>Tema Aplikasi</Label>
-            <RadioGroup
-              value={theme}
-              onValueChange={setTheme}
-              className="grid grid-cols-3 gap-4"
-            >
-              <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                <RadioGroupItem value="light" id="light" className="sr-only" />
-                <Sun className="h-6 w-6 mb-2" />
-                <span>Terang</span>
-              </Label>
-              <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                <RadioGroupItem value="dark" id="dark" className="sr-only" />
-                <Moon className="h-6 w-6 mb-2" />
-                <span>Gelap</span>
-              </Label>
-              <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                <RadioGroupItem value="system" id="system" className="sr-only" />
-                <Monitor className="h-6 w-6 mb-2" />
-                <span>Sistem</span>
-              </Label>
-            </RadioGroup>
+            {!isMounted ? (
+                <div className="grid grid-cols-3 gap-4">
+                    <Skeleton className="h-[76px] w-full" />
+                    <Skeleton className="h-[76px] w-full" />
+                    <Skeleton className="h-[76px] w-full" />
+                </div>
+            ) : (
+                <RadioGroup
+                  value={theme}
+                  onValueChange={setTheme}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                    <RadioGroupItem value="light" id="light" className="sr-only" />
+                    <Sun className="h-6 w-6 mb-2" />
+                    <span>Terang</span>
+                  </Label>
+                  <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                    <RadioGroupItem value="dark" id="dark" className="sr-only" />
+                    <Moon className="h-6 w-6 mb-2" />
+                    <span>Gelap</span>
+                  </Label>
+                  <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                    <RadioGroupItem value="system" id="system" className="sr-only" />
+                    <Monitor className="h-6 w-6 mb-2" />
+                    <span>Sistem</span>
+                  </Label>
+                </RadioGroup>
+            )}
           </div>
           <div className="flex items-center justify-between">
             <Label>Bahasa Tampilan</Label>
