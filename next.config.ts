@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.google.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.animenewsnetwork.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
