@@ -11,16 +11,27 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 async function checkAdminStatus() {
-    const sessionCookie = cookies().get("__session")?.value;
-    if (!sessionCookie) {
-        return false;
-    }
     try {
+        const sessionCookie = cookies().get("__session")?.value;
+        if (!sessionCookie) {
+            // If no cookie, definitely not an admin.
+            return false;
+        }
+
         const adminApp = getAdminApp();
-        const decodedClaims = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
+        // Verify the session cookie. The `true` checks for revocation.
+        const decodedClaims = await getAuth(adminApp).verifySessionCookie(
+            sessionCookie, 
+            true
+        );
+        
+        // Check if the 'admin' claim is explicitly true.
         return decodedClaims.admin === true;
+
     } catch (error) {
-        console.error("Error verifying session cookie:", error);
+        // Any error in verification means the user is not a valid admin.
+        // This can happen if the cookie is expired, revoked, or malformed.
+        console.error("Admin status check failed:", error);
         return false;
     }
 }
@@ -32,7 +43,6 @@ export default async function AdminPanelLayout({
     children: ReactNode;
 }) {
 
-    // This is a placeholder check. In a real app, you'd get the user's role.
     const isAdmin = await checkAdminStatus();
 
     if (!isAdmin) {
