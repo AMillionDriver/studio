@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { getAnimes } from '@/lib/data';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 // Daftar genre umum yang telah ditentukan
 const commonGenres = [
@@ -78,22 +81,51 @@ function getGenreIcon(genre: string) {
     return Icon ? <Icon className="h-8 w-8 text-primary" /> : <Tv className="h-8 w-8 text-primary" />;
 }
 
-function GenreGrid({ genres }: { genres: string[] }) {
+function GenreGrid({ genres, availableGenres }: { genres: string[], availableGenres: Set<string> }) {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {genres.map(genre => (
-            <Link key={genre} href={`/genre/${encodeURIComponent(genre)}`} className="group">
-                <Card className="flex flex-col items-center justify-center p-6 aspect-square transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1">
-                {getGenreIcon(genre)}
-                <p className="mt-3 font-semibold text-center text-sm md:text-base group-hover:text-primary transition-colors">{genre}</p>
+            {genres.map(genre => {
+              const isAvailable = availableGenres.has(genre.toLowerCase());
+              const cardContent = (
+                <Card 
+                  className={cn(
+                    "flex flex-col items-center justify-center p-6 aspect-square transition-all duration-300 ease-in-out relative",
+                    isAvailable ? "group-hover:shadow-lg group-hover:shadow-primary/20 group-hover:border-primary/50 group-hover:-translate-y-1" : "opacity-50 cursor-not-allowed bg-muted/50"
+                  )}
+                >
+                  {!isAvailable && (
+                    <Badge variant="destructive" className="absolute top-2 right-2 text-xs">Coming Soon</Badge>
+                  )}
+                  {getGenreIcon(genre)}
+                  <p className={cn(
+                    "mt-3 font-semibold text-center text-sm md:text-base transition-colors",
+                    isAvailable && "group-hover:text-primary"
+                  )}>{genre}</p>
                 </Card>
-            </Link>
-            ))}
+              );
+
+              if (isAvailable) {
+                return (
+                  <Link key={genre} href={`/genre/${encodeURIComponent(genre)}`} className="group">
+                    {cardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                 <div key={genre} className="group">
+                    {cardContent}
+                 </div>
+              );
+            })}
         </div>
     );
 }
 
 export default async function GenrePage() {
+  const animes = await getAnimes();
+  const availableGenres = new Set(animes.flatMap(anime => anime.genres.map(g => g.toLowerCase())));
+
   return (
     <div className="container mx-auto py-10 px-4 md:px-6 space-y-12">
       <div>
@@ -101,7 +133,7 @@ export default async function GenrePage() {
             <h1 className="text-3xl font-bold tracking-tight">Daftar Genre Umum</h1>
             <p className="text-muted-foreground mt-1">Jelajahi anime berdasarkan kategori paling populer.</p>
         </div>
-        <GenreGrid genres={commonGenres} />
+        <GenreGrid genres={commonGenres} availableGenres={availableGenres} />
       </div>
 
       <Separator />
@@ -111,7 +143,7 @@ export default async function GenrePage() {
             <h1 className="text-3xl font-bold tracking-tight">Niche & Spesifik</h1>
             <p className="text-muted-foreground mt-1">Temukan kategori yang lebih spesifik dan unik.</p>
         </div>
-        <GenreGrid genres={nicheGenres} />
+        <GenreGrid genres={nicheGenres} availableGenres={availableGenres} />
       </div>
     </div>
   );
