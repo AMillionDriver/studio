@@ -126,11 +126,11 @@ export default function ProfilePage() {
                 </Avatar>
                 {isEditingProfile && (
                   <>
-                    <input type="file" ref={fileInputref} onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" className="hidden" />
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" className="hidden" />
                     <Button
                       size="icon"
                       className="absolute bottom-0 right-0 rounded-full h-7 w-7"
-                      onClick={() => fileInputref.current?.click()}
+                      onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="h-4 w-4" />
                     </Button>
@@ -268,3 +268,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
