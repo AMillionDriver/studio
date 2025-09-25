@@ -14,34 +14,31 @@ async function checkAdminStatus(): Promise<boolean> {
     try {
         const sessionCookie = cookies().get("__session")?.value;
 
-        // 1. If there's no cookie, the user is definitely not an admin.
         if (!sessionCookie) {
             console.log("Admin check: No session cookie found.");
             return false;
         }
 
         const adminApp = getAdminApp();
-        
-        // 2. Verify the session cookie. The second parameter (true) checks if the session has been revoked.
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(
             sessionCookie, 
-            true
+            true // Check if the session has been revoked.
         );
         
-        // 3. (CRITICAL STEP) Explicitly check if the 'admin' claim is true.
-        // This is the main fix.
+        // This is the definitive check.
+        // It explicitly verifies if the 'admin' claim is set to true.
         const isAdmin = decodedClaims.admin === true;
 
         if (!isAdmin) {
-            console.log("Admin check: Cookie is valid, but 'admin' claim is not true.", decodedClaims);
+            console.log("Admin check: Cookie is valid, but 'admin' claim is not true or missing.", decodedClaims);
         }
 
         return isAdmin;
 
     } catch (error: any) {
-        // 4. Safely catch all possible errors (invalid cookie, expired, etc.)
-        // and return false.
-        console.error("Admin status check failed with error:", error.code);
+        // This block will catch any error during cookie verification,
+        // such as an invalid or expired cookie.
+        console.error("Admin status check failed:", error.code, error.message);
         return false;
     }
 }
