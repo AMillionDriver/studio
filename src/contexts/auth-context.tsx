@@ -28,6 +28,25 @@ import { uploadProfilePicture } from '@/lib/firebase/storage';
 
 const auth = getAuth(app);
 
+// This is a workaround to store the session cookie
+// on the client side for server components to access.
+async function setSessionCookie(user: User) {
+    const idToken = await user.getIdToken();
+    // Use a server action to set the cookie
+    await fetch("/api/auth/session", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+    });
+}
+
+// This is a workaround to remove the session cookie
+async function removeSessionCookie() {
+    await fetch("/api/auth/session", { method: "DELETE" });
+}
+
 export interface AppUser extends User {
   isAdmin?: boolean;
 }
@@ -92,8 +111,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const idTokenResult = await getIdTokenResult(firebaseUser, true); // Force refresh the token
         const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
+        await setSessionCookie(firebaseUser);
       } else {
         setUser(null);
+        await removeSessionCookie();
       }
       setLoading(false);
     });
@@ -309,5 +330,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-    

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, User as UserIcon, Settings, Shield, FileText, Lock, Info, Gavel } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Shield, FileText, Lock, Info, Gavel, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { AdminBadge } from "./admin-badge";
 import { Separator } from "../ui/separator";
@@ -37,6 +37,8 @@ export function UserNav() {
     { href: "/profile", label: "Profile", icon: UserIcon },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
+
+  const adminLink = { href: "/admin-panel", label: "Admin Panel", icon: LayoutDashboard };
 
   const legalLinks = [
     { href: "/dmca", label: "DMCA", icon: Gavel },
@@ -81,6 +83,16 @@ export function UserNav() {
                         </Link>
                     </SheetClose>
                 ))}
+                
+                {user.isAdmin && (
+                  <SheetClose asChild key={adminLink.href}>
+                      <Link href={adminLink.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary bg-primary/10 hover:bg-primary/20">
+                          <adminLink.icon className="h-5 w-5" />
+                          <span>{adminLink.label}</span>
+                      </Link>
+                  </SheetClose>
+                )}
+
 
                 <Separator className="my-2" />
                 
