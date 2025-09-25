@@ -186,6 +186,3 @@ export function AnimeList() {
     </div>
   );
 }
-
-
-
