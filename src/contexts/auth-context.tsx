@@ -17,14 +17,14 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   AuthError,
-  updateProfile,
+  updateProfile as firebaseUpdateProfile, // Renamed to avoid conflict
   linkWithPopup,
   getIdTokenResult
 } from 'firebase/auth';
 import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { uploadProfilePicture } from '@/lib/firebase/storage';
+import { updateUserProfile as updateUserProfileServerAction } from '@/lib/user.actions'; // Import server action
 
 const auth = getAuth(app);
 
@@ -32,17 +32,13 @@ const auth = getAuth(app);
 // on the client side for server components to access.
 async function setSessionCookie(user: User) {
     const idToken = await user.getIdToken(true); // Force refresh
-    // Use a server action to set the cookie
     await fetch("/api/auth/session", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
     });
 }
 
-// This is a workaround to remove the session cookie
 async function removeSessionCookie() {
     await fetch("/api/auth/session", { method: "DELETE" });
 }
@@ -107,14 +103,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
-        const idTokenResult = await firebaseUser.getIdTokenResult(true); // Force refresh the token
+        await setSessionCookie(firebaseUser);
+        const idTokenResult = await getIdTokenResult(firebaseUser, true);
         const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
-        await setSessionCookie(firebaseUser);
       } else {
-        setUser(null);
         await removeSessionCookie();
+        setUser(null);
       }
       setLoading(false);
     });
@@ -150,7 +147,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithGoogle = async () => {
     setLoading(true);
-    console.log("Attempting to sign in with Google...");
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -208,34 +204,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const changeUserPassword = async (oldPass: string, newPass: string) => {
     if (!user || !user.email) {
-        toast({
-            title: "Error",
-            description: "No user is currently signed in.",
-            variant: "destructive",
-        });
+        toast({ title: "Error", description: "No user is currently signed in.", variant: "destructive" });
         return;
     }
-
     try {
         const credential = EmailAuthProvider.credential(user.email, oldPass);
-        
-        // Re-authenticate user
         await reauthenticateWithCredential(user, credential);
-        
-        // Update password
         await updatePassword(user, newPass);
-        
-        toast({
-            title: "Password Updated",
-            description: "Your password has been changed successfully.",
-        });
-
+        toast({ title: "Password Updated", description: "Your password has been changed successfully." });
     } catch (error: any) {
-        toast({
-            title: "Password Change Failed",
-            description: formatAuthError(error.code),
-            variant: "destructive",
-        });
+        toast({ title: "Password Change Failed", description: formatAuthError(error.code), variant: "destructive" });
     }
   };
 
@@ -243,29 +221,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!auth.currentUser) return;
     setLoading(true);
 
+    const formData = new FormData();
+    if (data.displayName) {
+      formData.append('displayName', data.displayName);
+    }
+    if (data.photoFile) {
+      formData.append('photoFile', data.photoFile);
+    }
+
     try {
-      let photoURL = auth.currentUser.photoURL;
-      if (data.photoFile) {
-        photoURL = await uploadProfilePicture(auth.currentUser.uid, data.photoFile);
-      }
-
-      await updateProfile(auth.currentUser, {
-        displayName: data.displayName ?? auth.currentUser.displayName,
-        photoURL: photoURL
-      });
+      const result = await updateUserProfileServerAction(auth.currentUser.uid, formData);
       
-      // Manually update the user state to trigger re-render
-      setUser(prevUser => {
-        if (!prevUser) return null;
-        // Create a new object to ensure React detects the state change
-        const updatedUser = { ...auth.currentUser, isAdmin: prevUser.isAdmin } as AppUser;
-        return updatedUser;
-      });
+      if (result.success) {
+        // Optimistically update client-side user object while waiting for onAuthStateChanged
+        const newPhotoURL = result.photoURL || auth.currentUser.photoURL;
+        const newDisplayName = data.displayName || auth.currentUser.displayName;
+        await firebaseUpdateProfile(auth.currentUser, { displayName: newDisplayName, photoURL: newPhotoURL });
+        setUser(prev => prev ? ({ ...prev, displayName: newDisplayName, photoURL: newPhotoURL } as AppUser) : null);
 
-      toast({
-        title: "Profil Diperbarui",
-        description: "Informasi profil Anda telah berhasil diperbarui.",
-      });
+        toast({
+          title: "Profil Diperbarui",
+          description: "Informasi profil Anda telah berhasil diperbarui.",
+        });
+      } else {
+        throw new Error(result.error || "Gagal memperbarui profil di server.");
+      }
 
     } catch (error: any) {
       toast({
@@ -295,22 +275,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   
-
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
       router.push('/login');
-      toast({
-        title: "Logout Berhasil",
-      });
-    } catch (error: any)
-      {
+      toast({ title: "Logout Berhasil" });
+    } catch (error: any) {
       console.error("Error signing out", error);
-       toast({
-        title: "Logout Gagal",
-        description: `Terjadi kesalahan: ${error.message}`,
-        variant: "destructive",
-      });
+       toast({ title: "Logout Gagal", description: `Terjadi kesalahan: ${error.message}`, variant: "destructive" });
     }
   };
 
