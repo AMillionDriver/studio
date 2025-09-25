@@ -3,7 +3,7 @@ import { getAnimeById, getAnimes, getEpisodesForAnime } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook } from 'lucide-react';
+import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook, Shield } from 'lucide-react';
 import { RecommendedAnime } from '@/components/recommended-anime';
 import { EpisodeSelector } from '@/components/episode-selector';
 import { Separator } from '@/components/ui/separator';
@@ -50,10 +50,10 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground mb-4">
-                            {anime.rating && anime.rating > 0 && (
+                            {anime.rating && (
                                 <div className="flex items-center gap-1">
-                                    <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                    <span>{anime.rating.toFixed(1)}</span>
+                                    <Shield className="h-4 w-4 text-primary" />
+                                    <span className='font-semibold'>{anime.rating}</span>
                                 </div>
                             )}
                             <div className="flex items-center gap-1">

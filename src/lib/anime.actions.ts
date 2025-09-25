@@ -3,7 +3,7 @@
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminApp } from './firebase/admin-sdk';
-import type { Anime, AnimeUpdateFormData } from '@/types/anime';
+import type { Anime, AnimeRating } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
 
@@ -22,7 +22,7 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
   const description = formData.get('description') as string;
   const streamUrl = formData.get('streamUrl') as string;
   const genres = formData.get('genres') as string;
-  const rating = formData.get('rating') as string | null;
+  const rating = formData.get('rating') as AnimeRating | null;
   const releaseDateStr = formData.get('releaseDate') as string | null;
   
   const coverImageUrl = formData.get('coverImageUrl') as string | null;
@@ -60,11 +60,6 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
     } else {
       return { success: false, error: 'No cover image provided.' };
     }
-
-    const ratingNum = rating ? parseFloat(rating) : 0;
-    if (rating && isNaN(ratingNum)) {
-        return { success: false, error: 'Invalid number for rating.' };
-    }
     
     const releaseDate = releaseDateStr ? Timestamp.fromDate(new Date(releaseDateStr)) : FieldValue.serverTimestamp();
 
@@ -74,7 +69,7 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
       streamUrl,
       coverImageUrl: finalCoverImageUrl,
       genres: genres.split(',').map(g => g.trim()),
-      rating: ratingNum,
+      rating: rating || 'G',
       episodes: 1, // Default to 1 episode on creation
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -133,7 +128,7 @@ export async function updateAnime(animeId: string, formData: FormData): Promise<
   const description = formData.get('description') as string;
   const streamUrl = formData.get('streamUrl') as string;
   const genres = formData.get('genres') as string;
-  const rating = formData.get('rating') as string | null;
+  const rating = formData.get('rating') as AnimeRating | null;
   const releaseDateStr = formData.get('releaseDate') as string | null;
   
   const coverImageUploadMethod = formData.get('coverImageUploadMethod') as 'url' | 'upload';
@@ -165,10 +160,7 @@ export async function updateAnime(animeId: string, formData: FormData): Promise<
 
     // Optional fields
     if (rating) {
-        const ratingNum = parseFloat(rating);
-        if (!isNaN(ratingNum)) {
-            updateData.rating = ratingNum;
-        }
+        updateData.rating = rating;
     }
     if (releaseDateStr) {
         updateData.releaseDate = Timestamp.fromDate(new Date(releaseDateStr));

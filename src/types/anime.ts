@@ -11,6 +11,8 @@ export interface Creator {
     };
 }
 
+export type AnimeRating = "G" | "PG" | "PG-13" | "R" | "NC-17";
+
 // Type for data coming from/going to Firestore
 export interface Anime {
     id: string;
@@ -20,7 +22,7 @@ export interface Anime {
     coverImageUrl: string;
     genres: string[];
     creator?: Creator;
-    rating?: number;
+    rating?: AnimeRating; // Updated from number to specific string type
     episodes: number; // This will now represent the total number of episodes
     createdAt: FieldValue | Timestamp;
     updatedAt: FieldValue | Timestamp;
@@ -39,10 +41,11 @@ export interface Episode {
 
 
 // Type for data used in client components (serializable)
-export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt' | 'releaseDate'> {
+export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt' | 'releaseDate' | 'rating'> {
     createdAt: string;
     updatedAt: string;
     releaseDate?: string;
+    rating?: AnimeRating;
 }
 
 export interface EpisodeSerializable extends Omit<Episode, 'createdAt'> {
@@ -55,7 +58,7 @@ export interface AnimeFormData {
     description: string;
     streamUrl: string;
     genres: string;
-    rating?: string;
+    rating?: AnimeRating;
     releaseDate?: Date;
     coverImageUploadMethod: 'url' | 'upload';
     coverImageUrl?: string;
@@ -79,7 +82,7 @@ export interface AnimeUpdateFormData {
     streamUrl: string;
     genres: string;
 
-    rating?: string;
+    rating?: AnimeRating;
     releaseDate?: Date;
 
     // Fields for creator

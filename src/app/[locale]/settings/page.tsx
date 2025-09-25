@@ -8,7 +8,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Separator } from "@/components/ui/separator";
-import { Monitor, Moon, Sun, Shield, Bell, PlaySquare, Info } from "lucide-react";
+import { Monitor, Moon, Sun, Shield, Bell, PlaySquare, Info, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AnimeRating } from "@/types/anime";
+
+const ratings: AnimeRating[] = ["G", "PG", "PG-13", "R", "NC-17"];
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -62,7 +68,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
-      {/* Placeholder untuk Pengaturan Lainnya */}
+      {/* Pengaturan Pemutaran */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><PlaySquare className="h-5 w-5 text-primary"/> Pengaturan Pemutaran</CardTitle>
@@ -75,6 +81,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Pengaturan Notifikasi */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary"/> Pengaturan Notifikasi</CardTitle>
@@ -87,18 +94,58 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
+      {/* Kontrol Orang Tua */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary"/> Kontrol Orang Tua</CardTitle>
           <CardDescription>
-            Fitur ini sedang dalam pengembangan. Segera hadir: batasan konten berdasarkan rating dan kunci PIN.
+            Batasi konten berdasarkan rating dan lindungi pengaturan dengan PIN.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-            <Button disabled>Aktifkan</Button>
+        <CardContent className="space-y-6">
+            <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                    <Label htmlFor="parental-control-switch" className="text-base">Aktifkan Kontrol Orang Tua</Label>
+                    <p className="text-sm text-muted-foreground">Sembunyikan konten di atas rating yang dipilih.</p>
+                </div>
+                <Switch id="parental-control-switch" />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="content-rating-select">Batasan Konten</Label>
+                <Select>
+                    <SelectTrigger id="content-rating-select" className="w-[280px]">
+                        <SelectValue placeholder="Pilih rating maksimum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {ratings.map(r => (
+                          <SelectItem key={r} value={r}>
+                            {r === 'G' && 'G - Semua Umur'}
+                            {r === 'PG' && 'PG - Perlu Bimbingan Orang Tua'}
+                            {r === 'PG-13' && 'PG-13 - Peringatan Keras untuk Orang Tua'}
+                            {r === 'R' && 'R - Terbatas'}
+                            {r === 'NC-17' && 'NC-17 - Khusus Dewasa'}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">Anime dengan rating di atas ini tidak akan ditampilkan.</p>
+            </div>
+            
+            <div className="space-y-2">
+                <Label htmlFor="pin-input">PIN Perlindungan</Label>
+                <div className="flex items-center gap-2 max-w-xs">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                    <Input id="pin-input" type="password" maxLength={4} placeholder="Masukkan 4 digit PIN" />
+                </div>
+                <p className="text-sm text-muted-foreground">Gunakan PIN untuk mengubah pengaturan ini atau mengakses konten yang dibatasi.</p>
+            </div>
+
+            <div>
+                <Button>Simpan Pengaturan</Button>
+            </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }

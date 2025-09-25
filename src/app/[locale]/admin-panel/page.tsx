@@ -26,27 +26,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon, Youtube, Instagram, Facebook, Sparkles } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
-import type { AnimeFormData } from "@/types/anime";
+import type { AnimeFormData, AnimeRating } from "@/types/anime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { AnimeList } from "@/components/anime-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ListVideo, UploadCloud, Link as LinkIcon, User, VenetianMask } from "lucide-react";
+import { ListVideo, UploadCloud, VenetianMask } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import React, { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { XIcon } from "@/components/icons/x-icon";
 import { suggestGenres } from "@/ai/flows/personalized-anime-recommendations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const ratings: AnimeRating[] = ["G", "PG", "PG-13", "R", "NC-17"];
 
 const animeFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   streamUrl: z.string().url("Please enter a valid URL."),
   genres: z.string().min(1, "At least one genre is required."),
-  rating: z.string().optional(),
+  rating: z.enum(ratings).optional(),
   releaseDate: z.date().optional(),
   coverImageUploadMethod: z.enum(['url', 'upload']),
   coverImageUrl: z.string().url().optional().or(z.literal('')),
@@ -85,7 +87,7 @@ export default function AdminDashboardPage() {
       description: "",
       streamUrl: "",
       genres: "",
-      rating: "",
+      rating: "G",
       releaseDate: undefined,
       coverImageUploadMethod: 'url',
       coverImageUrl: "",
@@ -475,10 +477,25 @@ export default function AdminDashboardPage() {
                                   name="rating"
                                   render={({ field }) => (
                                   <FormItem>
-                                      <FormLabel>Rating (Optional)</FormLabel>
-                                      <FormControl>
-                                      <Input type="number" step="0.1" min="0" max="10" placeholder="e.g., 8.8" {...field} />
-                                      </FormControl>
+                                      <FormLabel>Rating</FormLabel>
+                                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a content rating" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {ratings.map(r => (
+                                            <SelectItem key={r} value={r}>
+                                                {r === 'G' && 'G - General Audiences'}
+                                                {r === 'PG' && 'PG - Parental Guidance Suggested'}
+                                                {r === 'PG-13' && 'PG-13 - Parents Strongly Cautioned'}
+                                                {r === 'R' && 'R - Restricted'}
+                                                {r === 'NC-17' && 'NC-17 - Adults Only'}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                       <FormMessage />
                                   </FormItem>
                                   )}
@@ -497,5 +514,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
