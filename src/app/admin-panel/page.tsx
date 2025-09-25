@@ -34,15 +34,36 @@ import { Calendar } from "@/components/ui/calendar";
 import { AnimeList } from "@/components/anime-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListVideo, UploadCloud } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import React from "react";
+
 
 const animeFormSchema = z.object({
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   streamUrl: z.string().url("Please enter a valid URL."),
-  coverImageUrl: z.string().url("Please enter a valid image URL."),
   genres: z.string().min(1, "At least one genre is required."),
   rating: z.string().optional(),
   releaseDate: z.date().optional(),
+  coverImageUploadMethod: z.enum(['url', 'upload']),
+  coverImageUrl: z.string().optional(),
+  coverImageFile: z.instanceof(FileList).optional(),
+}).refine(data => {
+    if (data.coverImageUploadMethod === 'url') {
+        return !!data.coverImageUrl && z.string().url().safeParse(data.coverImageUrl).success;
+    }
+    return true;
+}, {
+    message: "A valid URL is required.",
+    path: ["coverImageUrl"],
+}).refine(data => {
+    if (data.coverImageUploadMethod === 'upload') {
+        return data.coverImageFile && data.coverImageFile.length > 0;
+    }
+    return true;
+}, {
+    message: "A file is required for upload.",
+    path: ["coverImageFile"],
 });
 
 
@@ -54,16 +75,32 @@ export default function AdminDashboardPage() {
       title: "",
       description: "",
       streamUrl: "",
-      coverImageUrl: "",
       genres: "",
       rating: "",
       releaseDate: undefined,
+      coverImageUploadMethod: 'url',
+      coverImageUrl: "",
     },
   });
 
+  const uploadMethod = form.watch('coverImageUploadMethod');
+
   const onSubmit = async (data: AnimeFormData) => {
+    const formData = new FormData();
+    
+    // Append all form data to FormData object
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'coverImageFile' && value instanceof FileList && value.length > 0) {
+        formData.append(key, value[0]);
+      } else if (value instanceof Date) {
+        formData.append(key, value.toISOString());
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
     try {
-        const result = await addAnime(data);
+        const result = await addAnime(formData);
         if (result.success) {
             toast({
                 title: "Success!",
@@ -168,22 +205,65 @@ export default function AdminDashboardPage() {
                                   </FormItem>
                                   )}
                               />
-                              <FormField
-                                  control={form.control}
-                                  name="coverImageUrl"
-                                  render={({ field }) => (
-                                  <FormItem>
-                                      <FormLabel>Cover Image URL</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="https://example.com/image.jpg" {...field} />
-                                      </FormControl>
-                                      <FormDescription>
-                                          URL for the anime's poster/cover image.
-                                      </FormDescription>
-                                      <FormMessage />
-                                  </FormItem>
-                                  )}
-                              />
+                                <FormField
+                                    control={form.control}
+                                    name="coverImageUploadMethod"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-3">
+                                        <FormLabel>Cover Image Method</FormLabel>
+                                        <FormControl>
+                                            <RadioGroup
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            className="flex space-x-4"
+                                            >
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                <RadioGroupItem value="url" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">URL</FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                <RadioGroupItem value="upload" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Upload File</FormLabel>
+                                            </FormItem>
+                                            </RadioGroup>
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                {uploadMethod === 'url' ? (
+                                    <FormField
+                                        control={form.control}
+                                        name="coverImageUrl"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Cover Image URL</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                ) : (
+                                    <FormField
+                                        control={form.control}
+                                        name="coverImageFile"
+                                        render={({ field: { onChange, value, ...rest } }) => (
+                                            <FormItem>
+                                                <FormLabel>Cover Image File</FormLabel>
+                                                <FormControl>
+                                                    <Input type="file" accept="image/png, image/jpeg, image/gif" onChange={e => onChange(e.target.files)} {...rest} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -273,3 +353,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
