@@ -5,6 +5,7 @@ import Loading from './loading';
 import { FeaturedAnimeCarousel } from '@/components/featured-anime-carousel';
 import { AnimeShelf } from '@/components/anime-shelf';
 import { AnimeCard } from '@/components/anime-card';
+import { AnnouncementBanner } from '@/components/announcement-banner';
 
 async function HomePageContent() {
 
@@ -38,6 +39,8 @@ async function HomePageContent() {
         <FeaturedAnimeCarousel animes={featuredAnimes} />
       </Suspense>
       
+      <AnnouncementBanner />
+
       <div className="container mx-auto py-10 px-4 md:px-6 space-y-16">
         {latestAnimes.length > 0 && (
           <AnimeShelf title="Update Terbaru">
