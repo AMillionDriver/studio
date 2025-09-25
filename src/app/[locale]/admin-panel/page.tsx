@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon, Youtube, Instagram, Facebook } from "lucide-react";
+import { Calendar as CalendarIcon, Youtube, Instagram, Facebook, Sparkles } from "lucide-react";
 import { addAnime } from "@/lib/anime.actions";
 import type { AnimeFormData } from "@/types/anime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -35,9 +35,10 @@ import { AnimeList } from "@/components/anime-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListVideo, UploadCloud, Link as LinkIcon, User, VenetianMask } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import React from "react";
+import React, { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { XIcon } from "@/components/icons/x-icon";
+import { suggestGenres } from "@/ai/flows/personalized-anime-recommendations";
 
 
 const animeFormSchema = z.object({
@@ -76,6 +77,7 @@ const animeFormSchema = z.object({
 
 export default function AdminDashboardPage() {
   const { toast } = useToast();
+  const [isDetectingGenres, setIsDetectingGenres] = useState(false);
   const form = useForm<AnimeFormData>({
     resolver: zodResolver(animeFormSchema),
     defaultValues: {
@@ -96,6 +98,47 @@ export default function AdminDashboardPage() {
   });
 
   const uploadMethod = form.watch('coverImageUploadMethod');
+
+  const handleGenreDetection = async () => {
+    const title = form.getValues("title");
+    const description = form.getValues("description");
+
+    if (!title || !description) {
+      toast({
+        title: "Input Diperlukan",
+        description: "Silakan isi judul dan deskripsi terlebih dahulu untuk mendeteksi genre.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDetectingGenres(true);
+    try {
+      const result = await suggestGenres({ title, description });
+      if (result && result.genres.length > 0) {
+        form.setValue("genres", result.genres.join(", "));
+        toast({
+          title: "Genre Terdeteksi!",
+          description: "Kolom genre telah diisi secara otomatis.",
+        });
+      } else {
+        toast({
+          title: "Tidak Ada Genre yang Disarankan",
+          description: "AI tidak dapat menyarankan genre untuk judul dan deskripsi ini.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Genre detection failed:", error);
+      toast({
+        title: "Deteksi Gagal",
+        description: "Terjadi kesalahan saat berkomunikasi dengan AI.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDetectingGenres(false);
+    }
+  };
 
   const onSubmit = async (data: AnimeFormData) => {
     const formData = new FormData();
@@ -361,7 +404,19 @@ export default function AdminDashboardPage() {
                                   name="genres"
                                   render={({ field }) => (
                                   <FormItem>
-                                      <FormLabel>Genres</FormLabel>
+                                      <div className="flex items-center justify-between">
+                                        <FormLabel>Genres</FormLabel>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={handleGenreDetection}
+                                          disabled={isDetectingGenres}
+                                        >
+                                          <Sparkles className="mr-2 h-4 w-4" />
+                                          {isDetectingGenres ? "Mendeteksi..." : "Detect with AI"}
+                                        </Button>
+                                      </div>
                                       <FormControl>
                                       <Input placeholder="Action, Drama, Fantasy" {...field} />
                                       </FormControl>
