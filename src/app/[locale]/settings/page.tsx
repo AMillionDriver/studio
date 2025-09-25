@@ -16,36 +16,112 @@ import type { AnimeRating } from "@/types/anime";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const ratings: AnimeRating[] = ["G", "PG", "PG-13", "R", "NC-17"];
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
+
+  // Parental Control States
   const [isParentalControlEnabled, setIsParentalControlEnabled] = useState(false);
+  const [pin, setPin] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // States for PIN deactivation flow
+  const [showDisablePinDialog, setShowDisablePinDialog] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+  
+  // Countdown timer effect
+  useEffect(() => {
+    if (lockoutTime > Date.now()) {
+      const timer = setInterval(() => {
+        const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
+        if (remaining <= 0) {
+          clearInterval(timer);
+          setLockoutTime(0);
+          setFailedAttempts(0);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [lockoutTime]);
 
   const handleParentalControlSave = async () => {
     if (!isParentalControlEnabled) return;
     setIsSaving(true);
     setSaveSuccess(false);
 
-    // Simulate an API call
+    // Simulate an API call to save PIN and settings
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    toast({
+        title: "Pengaturan Tersimpan",
+        description: "Pengaturan kontrol orang tua Anda telah diperbarui."
+    })
 
     setIsSaving(false);
     setSaveSuccess(true);
     
-    // Revert button color after a short delay
     setTimeout(() => {
         setSaveSuccess(false);
     }, 2000);
   };
+  
+  const handleSwitchChange = (checked: boolean) => {
+    if (checked) {
+        // Turning ON is always allowed
+        setIsParentalControlEnabled(true);
+    } else {
+        // Turning OFF requires PIN
+        if (pin) { // Only show dialog if a PIN is set
+            setShowDisablePinDialog(true);
+        } else { // If no PIN is set, just turn it off
+            setIsParentalControlEnabled(false);
+        }
+    }
+  };
+  
+  const handlePinConfirmation = () => {
+    if (pinInput === pin) {
+        toast({ title: "Kontrol Orang Tua Dinonaktifkan" });
+        setIsParentalControlEnabled(false);
+        setShowDisablePinDialog(false);
+        setPinInput("");
+        setPinError("");
+        setFailedAttempts(0);
+    } else {
+        const newAttemptCount = failedAttempts + 1;
+        setFailedAttempts(newAttemptCount);
+        if (newAttemptCount >= 3) {
+            toast({
+                title: "Terlalu Banyak Percobaan",
+                description: "Fitur dinonaktifkan sementara selama 30 detik.",
+                variant: "destructive"
+            });
+            setLockoutTime(Date.now() + 30000); // Lock for 30 seconds
+            setShowDisablePinDialog(false);
+            setPinInput("");
+            setPinError("");
+        } else {
+            setPinError(`PIN salah. Sisa percobaan: ${3 - newAttemptCount}`);
+        }
+    }
+  };
+  
+  const isLockedOut = lockoutTime > Date.now();
+  const countdown = isLockedOut ? Math.ceil((lockoutTime - Date.now()) / 1000) : 0;
 
 
   return (
@@ -145,17 +221,45 @@ export default function SettingsPage() {
                     <Label htmlFor="parental-control-switch" className="text-base">Aktifkan Kontrol Orang Tua</Label>
                     <p className="text-sm text-muted-foreground">Sembunyikan konten di atas rating yang dipilih.</p>
                 </div>
-                <Switch 
-                    id="parental-control-switch" 
-                    checked={isParentalControlEnabled}
-                    onCheckedChange={setIsParentalControlEnabled}
-                />
+                <AlertDialog open={showDisablePinDialog} onOpenChange={setShowDisablePinDialog}>
+                    <Switch 
+                        id="parental-control-switch" 
+                        checked={isParentalControlEnabled}
+                        onCheckedChange={handleSwitchChange}
+                        disabled={isLockedOut}
+                    />
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Konfirmasi Penonaktifan</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Masukkan PIN perlindungan Anda untuk menonaktifkan Kontrol Orang Tua.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="space-y-2">
+                           <Input 
+                                type="password"
+                                placeholder="Masukkan 4 digit PIN"
+                                value={pinInput}
+                                onChange={(e) => {
+                                    setPinInput(e.target.value);
+                                    if (pinError) setPinError("");
+                                }}
+                                maxLength={4}
+                            />
+                            {pinError && <p className="text-sm text-destructive">{pinError}</p>}
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setPinError("")}>Batal</AlertDialogCancel>
+                            <AlertDialogAction onClick={handlePinConfirmation}>Konfirmasi</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
 
             <div className={cn("space-y-6 transition-opacity", !isParentalControlEnabled && "opacity-50 pointer-events-none")}>
                 <div className="space-y-2">
                     <Label htmlFor="content-rating-select">Batasan Konten</Label>
-                    <Select disabled={!isParentalControlEnabled}>
+                    <Select disabled={!isParentalControlEnabled || isLockedOut}>
                         <SelectTrigger id="content-rating-select" className="w-[280px]">
                             <SelectValue placeholder="Pilih rating maksimum" />
                         </SelectTrigger>
@@ -178,26 +282,38 @@ export default function SettingsPage() {
                     <Label htmlFor="pin-input">PIN Perlindungan</Label>
                     <div className="flex items-center gap-2 max-w-xs">
                         <Lock className="h-5 w-5 text-muted-foreground" />
-                        <Input id="pin-input" type="password" maxLength={4} placeholder="Masukkan 4 digit PIN" disabled={!isParentalControlEnabled}/>
+                        <Input 
+                          id="pin-input" 
+                          type="password" 
+                          maxLength={4} 
+                          placeholder="Masukkan 4 digit PIN" 
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value)}
+                          disabled={!isParentalControlEnabled || isLockedOut}
+                        />
                     </div>
-                    <p className="text-sm text-muted-foreground">Gunakan PIN untuk mengubah pengaturan ini atau mengakses konten yang dibatasi.</p>
+                    <p className="text-sm text-muted-foreground">Gunakan PIN untuk mengubah pengaturan ini.</p>
                 </div>
             </div>
 
             <div>
                 <Button 
                     onClick={handleParentalControlSave} 
-                    disabled={!isParentalControlEnabled || isSaving}
+                    disabled={!isParentalControlEnabled || isSaving || isLockedOut}
                     className={cn(
                         saveSuccess && "bg-green-500 hover:bg-green-600"
                     )}
                 >
                     {isSaving ? "Menyimpan..." : saveSuccess ? "Tersimpan!" : "Simpan Pengaturan"}
                 </Button>
+                {isLockedOut && (
+                     <p className="text-sm text-destructive mt-2">
+                        Terlalu banyak percobaan gagal. Silakan coba lagi dalam {countdown} detik.
+                    </p>
+                )}
             </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
