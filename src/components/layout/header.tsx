@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '../ui/input';
 import { UserNav } from './user-nav';
 import { useAuth } from '@/hooks/use-auth';
+import { LanguageSwitcher } from './language-switcher';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -88,6 +89,7 @@ export default function Header() {
             </DialogContent>
           </Dialog>
           <ThemeToggle />
+          <LanguageSwitcher />
           {user ? (
             <UserNav />
           ) : (
