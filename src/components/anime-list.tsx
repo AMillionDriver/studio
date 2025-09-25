@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -105,83 +104,81 @@ export function AnimeList() {
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {animes.map((anime) => (
-            <Collapsible
-              key={anime.id}
-              asChild
-              open={openCollapsibleId === anime.id}
-              onOpenChange={() => setOpenCollapsibleId(prevId => prevId === anime.id ? null : anime.id)}
-            >
-              <>
-                <TableRow>
-                  <TableCell>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="icon" className="w-9 p-0 data-[state=open]:rotate-180">
-                        <ChevronDown className="h-4 w-4" />
-                        <span className="sr-only">Toggle episodes</span>
+        {animes.map((anime) => (
+          <Collapsible
+            key={anime.id}
+            asChild
+            open={openCollapsibleId === anime.id}
+            onOpenChange={() => setOpenCollapsibleId(prevId => prevId === anime.id ? null : anime.id)}
+          >
+            <TableBody className="border-b">
+              <TableRow>
+                <TableCell>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-9 p-0 data-[state=open]:rotate-180">
+                      <ChevronDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle episodes</span>
+                    </Button>
+                  </CollapsibleTrigger>
+                </TableCell>
+                <TableCell className="font-medium">{anime.title}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {anime.genres.slice(0, 3).map((g) => (
+                      <Badge key={g} variant="secondary">{g}</Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">{anime.episodes}</TableCell>
+                <TableCell className="text-right space-x-1">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin-panel/edit/${anime.id}`}>
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                      <span className="sr-only">Edit Anime</span>
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin-panel/add-episode/${anime.id}`}>
+                      <Plus className="h-4 w-4 text-green-500" />
+                      <span className="sr-only">Add Episode</span>
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
-                    </CollapsibleTrigger>
-                  </TableCell>
-                  <TableCell className="font-medium">{anime.title}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {anime.genres.slice(0, 3).map((g) => (
-                        <Badge key={g} variant="secondary">{g}</Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">{anime.episodes}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/admin-panel/edit/${anime.id}`}>
-                        <Edit className="h-4 w-4 text-muted-foreground" />
-                        <span className="sr-only">Edit Anime</span>
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/admin-panel/add-episode/${anime.id}`}>
-                        <Plus className="h-4 w-4 text-green-500" />
-                        <span className="sr-only">Add Episode</span>
-                      </Link>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete <strong className="mx-1">{anime.title}</strong> from the database.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(anime.id, anime.title)}
-                            className="bg-destructive hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete <strong className="mx-1">{anime.title}</strong> from the database.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(anime.id, anime.title)}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+              <CollapsibleContent asChild>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableCell colSpan={5}>
+                    <AnimeEpisodeList animeId={anime.id} />
                   </TableCell>
                 </TableRow>
-                <CollapsibleContent asChild>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableCell colSpan={5}>
-                      <AnimeEpisodeList animeId={anime.id} />
-                    </TableCell>
-                  </TableRow>
-                </CollapsibleContent>
-              </>
-            </Collapsible>
-          ))}
-        </TableBody>
+              </CollapsibleContent>
+            </TableBody>
+          </Collapsible>
+        ))}
       </Table>
     </div>
   );
