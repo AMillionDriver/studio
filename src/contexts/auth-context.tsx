@@ -233,11 +233,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await updateUserProfileServerAction(auth.currentUser.uid, formData);
       
       if (result.success) {
-        // Optimistically update client-side user object while waiting for onAuthStateChanged
         const newPhotoURL = result.photoURL || auth.currentUser.photoURL;
         const newDisplayName = data.displayName || auth.currentUser.displayName;
-        await firebaseUpdateProfile(auth.currentUser, { displayName: newDisplayName, photoURL: newPhotoURL });
-        setUser(prev => prev ? ({ ...prev, displayName: newDisplayName, photoURL: newPhotoURL } as AppUser) : null);
+        
+        // Use client SDK to update profile for immediate UI feedback
+        await firebaseUpdateProfile(auth.currentUser, { 
+            displayName: newDisplayName, 
+            photoURL: newPhotoURL 
+        });
+
+        // Manually update the user state in the context to trigger re-renders
+        setUser(prevUser => {
+            if (!prevUser) return null;
+            // Create a new object to ensure React detects the state change
+            const updatedUser = { ...prevUser };
+            if (newDisplayName) updatedUser.displayName = newDisplayName;
+            if (newPhotoURL) updatedUser.photoURL = newPhotoURL;
+            return updatedUser as AppUser;
+        });
 
         toast({
           title: "Profil Diperbarui",

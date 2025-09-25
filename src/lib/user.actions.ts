@@ -72,31 +72,30 @@ export async function updateUserProfile(userId: string, formData: FormData): Pro
 
     try {
         let photoURL: string | undefined = undefined;
+        const updatePayload: { displayName?: string; photoURL?: string } = {};
 
-        // 1. If a new photo file is provided, upload it to Storage
+        // 1. If a new photo file is provided, upload it to Storage and get the URL.
         if (photoFile && photoFile.size > 0) {
             photoURL = await uploadProfilePicture(userId, photoFile);
-        }
-
-        // 2. Prepare the data payload for Firebase Auth update
-        const updatePayload: { displayName?: string; photoURL?: string } = {};
-        if (displayName) {
-            updatePayload.displayName = displayName;
-        }
-        if (photoURL) {
             updatePayload.photoURL = photoURL;
         }
 
-        // 3. Update the user record in Firebase Authentication
+        // 2. Add displayName to the payload if it exists.
+        if (displayName) {
+            updatePayload.displayName = displayName;
+        }
+        
+        // 3. Update the user record in Firebase Authentication if there's anything to update.
         if (Object.keys(updatePayload).length > 0) {
             await auth.updateUser(userId, updatePayload);
         }
         
-        // 4. Revalidate paths to ensure data is fresh across the app
+        // 4. Revalidate paths to ensure data is fresh across the app on next server-side render.
         revalidatePath('/profile');
         revalidatePath('/'); // For header updates
 
         console.log(`Successfully updated profile for user: ${userId}`);
+        // Return success and the new photoURL so the client can update immediately.
         return { success: true, photoURL: photoURL };
 
     } catch (error: any) {
