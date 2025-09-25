@@ -34,12 +34,12 @@ function AppBody({ children }: { children: ReactNode }) {
   );
 }
 
-export default function LocaleLayout({
+function AppProviders({
   children,
-  params: { locale }
+  locale
 }: {
   children: ReactNode;
-  params: { locale: string };
+  locale: string;
 }) {
   return (
     <I18nProviderClient locale={locale}>
@@ -56,5 +56,19 @@ export default function LocaleLayout({
         </AuthProvider>
       </ThemeProvider>
     </I18nProviderClient>
+  );
+}
+
+export default function LocaleLayout({
+  children,
+  params: { locale }
+}: {
+  children: ReactNode;
+  params: { locale: string };
+}) {
+  return (
+    <AppProviders locale={locale}>
+      {children}
+    </AppProviders>
   );
 }
