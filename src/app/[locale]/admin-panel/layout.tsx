@@ -25,12 +25,12 @@ async function checkAdminStatus() {
             true
         );
         
-        // Check if the 'admin' claim is explicitly true.
+        // ** THE CRUCIAL FIX **
+        // Explicitly check if the 'admin' claim from the decoded token is true.
         return decodedClaims.admin === true;
 
     } catch (error) {
-        // Any error in verification means the user is not a valid admin.
-        // This can happen if the cookie is expired, revoked, or malformed.
+        // Any error in verification (expired, revoked, malformed cookie) means the user is not a valid admin.
         console.error("Admin status check failed:", error);
         return false;
     }
