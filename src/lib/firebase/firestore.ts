@@ -151,6 +151,7 @@ function docToAnimeSerializable(doc: any): AnimeSerializable {
         streamUrl: data.streamUrl,
         coverImageUrl: data.coverImageUrl,
         genres: data.genres,
+        creator: data.creator,
         rating: data.rating,
         episodes: data.episodes,
         createdAt: createdAt,

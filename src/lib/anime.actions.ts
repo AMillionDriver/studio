@@ -3,7 +3,7 @@
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminApp } from './firebase/admin-sdk';
-import type { Anime, AnimeFormData, AnimeUpdateFormData, Creator } from '@/types/anime';
+import type { Anime, AnimeUpdateFormData } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
 
@@ -124,27 +124,75 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
  * @param formData The form data with the updated values.
  * @returns An object indicating success or failure.
  */
-export async function updateAnime(animeId: string, formData: AnimeUpdateFormData): Promise<{ success: boolean; error?: string }> {
+export async function updateAnime(animeId: string, formData: FormData): Promise<{ success: boolean; error?: string }> {
   if (!animeId) {
     return { success: false, error: 'Anime ID is required for an update.' };
   }
+  
+  const title = formData.get('title') as string;
+  const description = formData.get('description') as string;
+  const streamUrl = formData.get('streamUrl') as string;
+  const genres = formData.get('genres') as string;
+  const rating = formData.get('rating') as string | null;
+  const releaseDateStr = formData.get('releaseDate') as string | null;
+  
+  const coverImageUploadMethod = formData.get('coverImageUploadMethod') as 'url' | 'upload';
+  const coverImageUrl = formData.get('coverImageUrl') as string | null;
+  const coverImageFile = formData.get('coverImageFile') as File | null;
 
-  const { title, description, coverImageUrl } = formData;
+  const creatorName = formData.get('creatorName') as string | null;
+  const creatorYoutube = formData.get('creatorYoutube') as string | null;
+  const creatorInstagram = formData.get('creatorInstagram') as string | null;
+  const creatorTwitter = formData.get('creatorTwitter') as string | null;
+  const creatorFacebook = formData.get('creatorFacebook') as string | null;
 
-  if (!title || !description || !coverImageUrl) {
-    return { success: false, error: 'Title, description, and cover image URL are required.' };
+
+  if (!title || !description || !streamUrl || !genres) {
+    return { success: false, error: 'Title, description, stream URL and genres are required.' };
   }
 
   try {
     const animeRef = firestore.collection('animes').doc(animeId);
-
-    const updateData = {
-      title,
-      description,
-      coverImageUrl,
-      updatedAt: FieldValue.serverTimestamp(),
+    const updateData: { [key: string]: any } = {
+        updatedAt: FieldValue.serverTimestamp(),
     };
+    
+    // Simple fields
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (streamUrl) updateData.streamUrl = streamUrl;
+    if (genres) updateData.genres = genres.split(',').map(g => g.trim());
 
+    // Optional fields
+    if (rating) {
+        const ratingNum = parseFloat(rating);
+        if (!isNaN(ratingNum)) {
+            updateData.rating = ratingNum;
+        }
+    }
+    if (releaseDateStr) {
+        updateData.releaseDate = Timestamp.fromDate(new Date(releaseDateStr));
+    }
+
+    // Handle cover image
+    if (coverImageUploadMethod === 'upload' && coverImageFile && coverImageFile.size > 0) {
+        updateData.coverImageUrl = await uploadAnimeCover(animeId, coverImageFile);
+    } else if (coverImageUploadMethod === 'url' && coverImageUrl) {
+        updateData.coverImageUrl = coverImageUrl;
+    }
+
+    // Handle creator info
+    if (creatorName) {
+        updateData['creator.name'] = creatorName;
+        updateData['creator.socials.youtube'] = creatorYoutube || FieldValue.delete();
+        updateData['creator.socials.instagram'] = creatorInstagram || FieldValue.delete();
+        updateData['creator.socials.twitter'] = creatorTwitter || FieldValue.delete();
+        updateData['creator.socials.facebook'] = creatorFacebook || FieldValue.delete();
+    } else {
+        // If creator name is removed, delete the whole creator object
+        updateData.creator = FieldValue.delete();
+    }
+    
     await animeRef.update(updateData);
 
     revalidatePath('/admin-panel');

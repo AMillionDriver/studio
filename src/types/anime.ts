@@ -76,7 +76,23 @@ export interface EpisodeFormData {
 export interface AnimeUpdateFormData {
     title: string;
     description: string;
-    coverImageUrl: string;
+    streamUrl: string;
+    genres: string;
+
+    rating?: string;
+    releaseDate?: Date;
+
+    // Fields for creator
+    creatorName?: string;
+    creatorYoutube?: string;
+    creatorInstagram?: string;
+    creatorTwitter?: string;
+    creatorFacebook?: string;
+
+    // Fields for cover image update
+    coverImageUploadMethod: 'url' | 'upload';
+    coverImageUrl?: string;
+    coverImageFile?: FileList;
 }
 
 export interface EpisodeUpdateFormData {
