@@ -235,12 +235,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       await updateProfile(user, {
-        displayName: data.displayName,
+        displayName: data.displayName ?? user.displayName,
         photoURL: photoURL
       });
 
-      // Manually update the user object as onAuthStateChanged might not fire immediately
-      setUser({ ...user, ...await getAuth().currentUser }); 
+      // The onAuthStateChanged listener will automatically pick up the changes.
+      // No need to manually call setUser here, which was causing the infinite loop.
 
       toast({
         title: "Profil Diperbarui",
