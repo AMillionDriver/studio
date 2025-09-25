@@ -41,13 +41,13 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
 export default function LocaleLayout({
   children,
-  params: { locale }
+  params
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string }
 }>) {
   return (
-    <I18nProvider locale={locale}>
+    <I18nProvider locale={params.locale}>
       <div className={`${inter.variable} font-body antialiased`}>
         <ThemeProvider
           attribute="class"
