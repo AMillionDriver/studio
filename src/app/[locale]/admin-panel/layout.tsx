@@ -14,7 +14,7 @@ async function checkAdminStatus(): Promise<boolean> {
     try {
         const sessionCookie = cookies().get("__session")?.value;
 
-        // 1. Jika tidak ada cookie, pengguna pasti bukan admin.
+        // 1. If there's no cookie, the user is definitely not an admin.
         if (!sessionCookie) {
             console.log("Admin check: No session cookie found.");
             return false;
@@ -22,14 +22,14 @@ async function checkAdminStatus(): Promise<boolean> {
 
         const adminApp = getAdminApp();
         
-        // 2. Verifikasi cookie sesi. Parameter kedua (true) memeriksa apakah sesi telah dicabut.
+        // 2. Verify the session cookie. The second parameter (true) checks if the session has been revoked.
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(
             sessionCookie, 
             true
         );
         
-        // 3. (LANGKAH KRITIS) Periksa secara eksplisit apakah claim 'admin' bernilai true.
-        // Ini adalah perbaikan utama.
+        // 3. (CRITICAL STEP) Explicitly check if the 'admin' claim is true.
+        // This is the main fix.
         const isAdmin = decodedClaims.admin === true;
 
         if (!isAdmin) {
@@ -39,8 +39,8 @@ async function checkAdminStatus(): Promise<boolean> {
         return isAdmin;
 
     } catch (error: any) {
-        // 4. Tangkap semua kemungkinan error (cookie tidak valid, kedaluwarsa, dll)
-        // dan kembalikan false dengan aman.
+        // 4. Safely catch all possible errors (invalid cookie, expired, etc.)
+        // and return false.
         console.error("Admin status check failed with error:", error.code);
         return false;
     }
