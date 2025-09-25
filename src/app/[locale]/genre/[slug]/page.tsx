@@ -1,3 +1,4 @@
+
 import { getAnimes } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { AnimeCard } from '@/components/anime-card';
@@ -14,6 +15,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+// Helper function to normalize genre strings
+const normalizeGenre = (genre: string) => {
+    // Converts to lowercase and removes diacritics (e.g., 'ō' -> 'o')
+    return genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
 export default async function GenreSlugPage({ params }: { params: { slug: string } }) {
   const genre = decodeURIComponent(params.slug);
   if (!genre) {
@@ -21,10 +28,10 @@ export default async function GenreSlugPage({ params }: { params: { slug: string
   }
 
   const allAnimes = await getAnimes();
-  // Normalize genre from URL and from anime data for case-insensitive matching
-  const normalizedGenre = genre.toLowerCase();
+  // Normalize genre from URL and from anime data for case-insensitive and diacritic-insensitive matching
+  const normalizedGenreSlug = normalizeGenre(genre);
   const animesInGenre = allAnimes.filter(anime =>
-    anime.genres.map(g => g.toLowerCase()).includes(normalizedGenre)
+    anime.genres.map(g => normalizeGenre(g)).includes(normalizedGenreSlug)
   );
 
   return (

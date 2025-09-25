@@ -1,4 +1,5 @@
 
+
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import {
@@ -75,8 +76,15 @@ const genreIconMap: Record<string, React.FC<LucideProps>> = {
     'gakuen': GraduationCap,
 };
 
+// Helper function to normalize genre strings
+const normalizeGenre = (genre: string) => {
+    // Converts to lowercase and removes diacritics (e.g., 'ō' -> 'o')
+    return genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
+
 function getGenreIcon(genre: string) {
-    const iconKey = genre.toLowerCase();
+    const iconKey = normalizeGenre(genre);
     const Icon = genreIconMap[iconKey];
     return Icon ? <Icon className="h-8 w-8 text-primary" /> : <Tv className="h-8 w-8 text-primary" />;
 }
@@ -85,7 +93,7 @@ function GenreGrid({ genres, availableGenres }: { genres: string[], availableGen
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {genres.map(genre => {
-              const isAvailable = availableGenres.has(genre.toLowerCase());
+              const isAvailable = availableGenres.has(normalizeGenre(genre));
               const cardContent = (
                 <Card 
                   className={cn(
@@ -124,7 +132,7 @@ function GenreGrid({ genres, availableGenres }: { genres: string[], availableGen
 
 export default async function GenrePage() {
   const animes = await getAnimes();
-  const availableGenres = new Set(animes.flatMap(anime => anime.genres.map(g => g.toLowerCase())));
+  const availableGenres = new Set(animes.flatMap(anime => anime.genres.map(g => normalizeGenre(g))));
 
   return (
     <div className="container mx-auto py-10 px-4 md:px-6 space-y-12">
