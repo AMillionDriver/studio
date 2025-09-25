@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { t } = useI18n();
+  const t = useI18n();
   const [animes, setAnimes] = useState<AnimeSerializable[]>([]);
   const [loading, setLoading] = useState(true);
   

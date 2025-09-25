@@ -17,7 +17,7 @@ import { useI18n } from '@/app/i18n/client';
 
 export default function Header() {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const t = useI18n();
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
