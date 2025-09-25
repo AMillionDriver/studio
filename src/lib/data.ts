@@ -46,33 +46,25 @@ export async function getAnimes(
     sortField: keyof Anime = 'createdAt',
     sortDirection: OrderByDirection = 'desc'
 ): Promise<AnimeSerializable[]> {
-    try {
-        const animesCollection = collection(firestore, 'animes');
-        let q = query(animesCollection, orderBy(sortField, sortDirection));
-        
-        if (count) {
-            q = query(q, limit(count));
-        }
-        
-        const querySnapshot = await getDocs(q);
+    const animesCollection = collection(firestore, 'animes');
+    let q = query(animesCollection, orderBy(sortField, sortDirection));
+    
+    if (count) {
+        q = query(q, limit(count));
+    }
+    
+    const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-            console.log("No animes found in the collection.");
-            return [];
-        }
-
-        const animes: AnimeSerializable[] = querySnapshot.docs.map(doc => {
-            return docToAnimeSerializable(doc);
-        });
-        
-        return animes;
-
-    } catch (error) {
-        console.error("Error fetching animes: ", error);
-        // In a real app, you might want to throw the error
-        // or return a more specific error state.
+    if (querySnapshot.empty) {
+        console.log("No animes found in the collection.");
         return [];
     }
+
+    const animes: AnimeSerializable[] = querySnapshot.docs.map(doc => {
+        return docToAnimeSerializable(doc);
+    });
+    
+    return animes;
 }
 
 
@@ -82,25 +74,19 @@ export async function getAnimes(
  * @returns A promise that resolves to a serializable anime object or null if not found.
  */
 export async function getAnimeById(id: string): Promise<AnimeSerializable | null> {
-    try {
-        if (!id) {
-            console.log("getAnimeById called with no ID.");
-            return null;
-        }
-        const docRef = doc(firestore, 'animes', id);
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-            console.log(`No anime found with ID: ${id}`);
-            return null;
-        }
-
-        return docToAnimeSerializable(docSnap);
-
-    } catch (error) {
-        console.error(`Error fetching anime with ID ${id}: `, error);
+    if (!id) {
+        console.log("getAnimeById called with no ID.");
         return null;
     }
+    const docRef = doc(firestore, 'animes', id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+        console.log(`No anime found with ID: ${id}`);
+        return null;
+    }
+
+    return docToAnimeSerializable(docSnap);
 }
 
 /**
@@ -109,36 +95,30 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
  * @returns A promise that resolves to an array of serializable episode objects.
  */
 export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSerializable[]> {
-    try {
-        if (!animeId) return [];
+    if (!animeId) return [];
 
-        const episodesCollection = collection(firestore, 'animes', animeId, 'episodes');
-        const q = query(episodesCollection, orderBy('episodeNumber', 'asc'));
-        const querySnapshot = await getDocs(q);
+    const episodesCollection = collection(firestore, 'animes', animeId, 'episodes');
+    const q = query(episodesCollection, orderBy('episodeNumber', 'asc'));
+    const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-            return [];
-        }
-
-        const episodes: EpisodeSerializable[] = querySnapshot.docs.map(doc => {
-             const data = doc.data() as Episode;
-             const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
-             return {
-                 id: doc.id,
-                 animeId: data.animeId,
-                 episodeNumber: data.episodeNumber,
-                 title: data.title,
-                 videoUrl: data.videoUrl,
-                 createdAt: createdAt
-             };
-        });
-
-        return episodes;
-
-    } catch (error) {
-        console.error(`Error fetching episodes for anime ${animeId}:`, error);
+    if (querySnapshot.empty) {
         return [];
     }
+
+    const episodes: EpisodeSerializable[] = querySnapshot.docs.map(doc => {
+         const data = doc.data() as Episode;
+         const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+         return {
+             id: doc.id,
+             animeId: data.animeId,
+             episodeNumber: data.episodeNumber,
+             title: data.title,
+             videoUrl: data.videoUrl,
+             createdAt: createdAt
+         };
+    });
+
+    return episodes;
 }
 
 
@@ -149,31 +129,25 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
  * @returns A promise that resolves to a serializable episode object or null.
  */
 export async function getEpisodeById(animeId: string, episodeId: string): Promise<EpisodeSerializable | null> {
-    try {
-        if (!animeId || !episodeId) return null;
+    if (!animeId || !episodeId) return null;
 
-        const episodeRef = doc(firestore, 'animes', animeId, 'episodes', episodeId);
-        const docSnap = await getDoc(episodeRef);
+    const episodeRef = doc(firestore, 'animes', animeId, 'episodes', episodeId);
+    const docSnap = await getDoc(episodeRef);
 
-        if (!docSnap.exists()) {
-            console.log(`Episode with ID ${episodeId} not found in anime ${animeId}`);
-            return null;
-        }
-
-        const data = docSnap.data() as Episode;
-        const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
-        
-        return {
-            id: docSnap.id,
-            animeId: data.animeId,
-            episodeNumber: data.episodeNumber,
-            title: data.title,
-            videoUrl: data.videoUrl,
-            createdAt: createdAt,
-        };
-
-    } catch (error) {
-        console.error(`Error fetching episode ${episodeId} for anime ${animeId}: `, error);
+    if (!docSnap.exists()) {
+        console.log(`Episode with ID ${episodeId} not found in anime ${animeId}`);
         return null;
     }
+
+    const data = docSnap.data() as Episode;
+    const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+    
+    return {
+        id: docSnap.id,
+        animeId: data.animeId,
+        episodeNumber: data.episodeNumber,
+        title: data.title,
+        videoUrl: data.videoUrl,
+        createdAt: createdAt,
+    };
 }
