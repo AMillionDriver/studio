@@ -1,3 +1,4 @@
+
 // This script uses the Firebase Admin SDK to set a custom user claim.
 // You must run this script in a Node.js environment (e.g., your local machine), not in the browser.
 
