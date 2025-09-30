@@ -11,34 +11,24 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 async function checkAdminStatus(): Promise<boolean> {
+    const sessionCookie = cookies().get("__session")?.value;
+
+    if (!sessionCookie) {
+        return false;
+    }
+
     try {
-        const sessionCookie = cookies().get("__session")?.value;
-
-        if (!sessionCookie) {
-            console.log("Admin check: No session cookie found.");
-            return false;
-        }
-
         const adminApp = getAdminApp();
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(
             sessionCookie, 
-            true // Check if the session has been revoked.
+            true // Check for revocation
         );
         
-        // This is the definitive check.
-        // It explicitly verifies if the 'admin' claim is set to true.
         const isAdmin = decodedClaims.admin === true;
-
-        if (!isAdmin) {
-            console.log("Admin check: Cookie is valid, but 'admin' claim is not true or missing.", decodedClaims);
-        }
-
         return isAdmin;
 
-    } catch (error: any) {
-        // This block will catch any error during cookie verification,
-        // such as an invalid or expired cookie.
-        console.error("Admin status check failed:", error.code, error.message);
+    } catch (error) {
+        console.error("Admin status check failed:", error);
         return false;
     }
 }

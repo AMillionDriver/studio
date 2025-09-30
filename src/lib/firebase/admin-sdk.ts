@@ -1,17 +1,6 @@
 
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 
-let _app: App | null = null;
-
-// IMPORTANT: You must provide your own service account credentials.
-// Download your service account JSON file from the Firebase console:
-// Project settings > Service accounts > Generate new private key
-//
-// Then, set the following environment variables in a .env file:
-// FIREBASE_PROJECT_ID="your-project-id"
-// FIREBASE_PRIVATE_KEY="your-private-key" (replace \n with \\n)
-// FIREBASE_CLIENT_EMAIL="your-client-email"
-
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -24,17 +13,13 @@ const serviceAccount = {
  * in client-side bundles.
  */
 export function getAdminApp(): App {
-  if (_app) {
-    return _app;
-  }
-
-  // Check if the default app is already initialized
-  if (getApps().some(app => app.name === '[DEFAULT]')) {
-    _app = getApps().find(app => app.name === '[DEFAULT]')!;
-    return _app;
+  const appName = 'firebase-admin-app';
+  const existingApp = getApps().find(app => app.name === appName);
+  
+  if (existingApp) {
+    return existingApp;
   }
   
-  // Ensure all required service account properties are present
   if (
     !serviceAccount.projectId ||
     !serviceAccount.privateKey ||
@@ -45,10 +30,7 @@ export function getAdminApp(): App {
     );
   }
 
-  // Initialize the Firebase Admin SDK
-  _app = initializeApp({
+  return initializeApp({
     credential: cert(serviceAccount),
-  });
-
-  return _app;
+  }, appName);
 }

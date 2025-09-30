@@ -106,7 +106,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       if (firebaseUser) {
         await setSessionCookie(firebaseUser);
-        // Force refresh the token to get the latest custom claims.
         const idTokenResult = await getIdTokenResult(firebaseUser, true); 
         const isAdmin = idTokenResult.claims.admin === true;
         setUser({ ...firebaseUser, isAdmin });
@@ -235,11 +234,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         photoURL: photoURL,
       });
 
-      // Reload user to get fresh data, including the new photoURL
-      await auth.currentUser.reload();
       const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 
-      // Update the local user state to reflect changes immediately
       setUser({ ...auth.currentUser, isAdmin: idTokenResult.claims.admin === true });
 
       toast({
