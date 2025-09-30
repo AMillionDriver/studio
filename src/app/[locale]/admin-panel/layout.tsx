@@ -10,24 +10,35 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+/**
+ * Verifies the user's admin status by checking the session cookie on the server.
+ * This function is critical for server-side route protection.
+ * @returns A promise that resolves to true if the user is an admin, otherwise false.
+ */
 async function checkAdminStatus(): Promise<boolean> {
-    const sessionCookie = cookies().get("__session")?.value;
-
-    if (!sessionCookie) {
-        return false;
-    }
-
     try {
+        const sessionCookie = cookies().get("__session")?.value;
+
+        // If no cookie is found, the user is not authenticated.
+        if (!sessionCookie) {
+            return false;
+        }
+
         const adminApp = getAdminApp();
+        // Verify the session cookie. This checks for validity and expiration.
         const decodedClaims = await getAuth(adminApp).verifySessionCookie(
             sessionCookie, 
-            true // Check for revocation
+            true // Check for revocation.
         );
         
+        // The crucial step: explicitly check if the 'admin' custom claim is true.
         const isAdmin = decodedClaims.admin === true;
+        
         return isAdmin;
 
     } catch (error) {
+        // Any error during verification (e.g., expired cookie, invalid signature)
+        // means the user is not a valid admin.
         console.error("Admin status check failed:", error);
         return false;
     }
