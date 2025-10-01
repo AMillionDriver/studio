@@ -15,7 +15,7 @@ import { Logo } from "./logo";
 import { Separator } from "../ui/separator";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ListVideo, LineChart, Users, Settings } from "lucide-react";
+import { ListVideo, LineChart, Users, Settings, Shield } from "lucide-react";
 import { UserNav } from "./user-nav";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -23,6 +23,7 @@ const links = [
     { href: "/admin-panel", label: "Anime Management", icon: ListVideo },
     { href: "/admin-panel/analytics", label: "Analytics", icon: LineChart },
     { href: "/admin-panel/users", label: "User Management", icon: Users },
+    { href: "/admin-panel/security", label: "Keamanan", icon: Shield },
     { href: "/admin-panel/settings", label: "Platform Settings", icon: Settings },
 ];
 

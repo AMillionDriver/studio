@@ -21,7 +21,7 @@ async function checkIsAdmin(): Promise<boolean> {
   try {
     const sessionCookie = cookies().get("__session")?.value;
     if (!sessionCookie) {
-      console.log("Admin Check: No session cookie found.");
+      // No cookie, definitely not an admin.
       return false;
     }
 
@@ -32,12 +32,10 @@ async function checkIsAdmin(): Promise<boolean> {
     // Explicitly check if the UID from the token matches the hardcoded admin UID.
     const isAuthorized = decodedClaims.uid === ADMIN_UID;
     
-    if (!isAuthorized) {
-        console.log(`Admin Check: UID mismatch. Expected ${ADMIN_UID}, got ${decodedClaims.uid}.`);
-    }
-
     return isAuthorized;
   } catch (error) {
+    // Any error during verification means the user is not authenticated or authorized.
+    // This catches invalid cookies, expired cookies, etc.
     console.error("Admin Check: Error verifying session cookie.", error);
     return false;
   }
@@ -53,7 +51,7 @@ function AccessDenied() {
                     </div>
                     <CardTitle className="text-2xl text-destructive-foreground">Akses Ditolak</CardTitle>
                     <CardDescription className="text-destructive-foreground/80">
-                        Anda tidak memiliki izin untuk mengakses halaman ini. Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.
+                        Anda tidak memiliki izin untuk mengakses halaman ini. Hanya super admin yang dapat mengakses halaman ini.
                     </CardDescription>
                     <div className="pt-4">
                         <Button asChild>
