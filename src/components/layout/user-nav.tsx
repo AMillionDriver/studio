@@ -88,14 +88,13 @@ export function UserNav() {
                     </SheetClose>
                 ))}
                 
-                {isUserAdmin && (
-                  <SheetClose asChild key={adminLink.href}>
-                      <Link href={adminLink.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary bg-primary/10 hover:bg-primary/20">
-                          <adminLink.icon className="h-5 w-5" />
-                          <span>{adminLink.label}</span>
-                      </Link>
-                  </SheetClose>
-                )}
+                {/* Always show admin link */}
+                <SheetClose asChild key={adminLink.href}>
+                    <Link href={adminLink.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary bg-primary/10 hover:bg-primary/20">
+                        <adminLink.icon className="h-5 w-5" />
+                        <span>{adminLink.label}</span>
+                    </Link>
+                </SheetClose>
 
 
                 <Separator className="my-2" />
