@@ -18,6 +18,8 @@ import Link from "next/link";
 import { AdminBadge } from "./admin-badge";
 import { Separator } from "../ui/separator";
 
+const ADMIN_UID = "Lz56srOfOWPJpiNMbPJJznPPik23";
+
 export function UserNav() {
   const { user, signOut } = useAuth();
 
@@ -48,6 +50,8 @@ export function UserNav() {
     { href: "/about", label: "About Us", icon: Info },
   ];
 
+  const isUserAdmin = user && user.uid === ADMIN_UID;
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -64,7 +68,7 @@ export function UserNav() {
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-2">
                     <p className="text-lg font-semibold leading-none">{user.isAnonymous ? "Guest User" : user.displayName || "User"}</p>
-                    {user.isAdmin && <AdminBadge />}
+                    {isUserAdmin && <AdminBadge />}
                 </div>
                 <p className="text-sm leading-none text-muted-foreground">
                   {user.isAnonymous ? "You are browsing anonymously" : user.email}
@@ -84,7 +88,7 @@ export function UserNav() {
                     </SheetClose>
                 ))}
                 
-                {user.isAdmin && (
+                {isUserAdmin && (
                   <SheetClose asChild key={adminLink.href}>
                       <Link href={adminLink.href} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-primary bg-primary/10 hover:bg-primary/20">
                           <adminLink.icon className="h-5 w-5" />

@@ -105,9 +105,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
-        await setSessionCookie(firebaseUser);
-        const idTokenResult = await getIdTokenResult(firebaseUser, true); 
+        // Force refresh the token to get the latest custom claims.
+        const idTokenResult = await firebaseUser.getIdTokenResult(true);
         const isAdmin = idTokenResult.claims.admin === true;
+        
+        // Pass the refreshed token to the session cookie endpoint.
+        await setSessionCookie(firebaseUser);
+
         setUser({ ...firebaseUser, isAdmin });
       } else {
         await removeSessionCookie();
