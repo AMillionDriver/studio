@@ -23,7 +23,7 @@ const links = [
     { href: "/admin-panel", label: "Anime Management", icon: ListVideo },
     { href: "/admin-panel/analytics", label: "Analytics", icon: LineChart },
     { href: "/admin-panel/users", label: "User Management", icon: Users },
-    { href: "/admin-panel/security", label: "Keamanan", icon: Shield },
+    { href: "/admin-security", label: "Keamanan", icon: Shield },
     { href: "/admin-panel/settings", label: "Platform Settings", icon: Settings },
 ];
 
