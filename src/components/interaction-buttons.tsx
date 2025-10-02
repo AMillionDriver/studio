@@ -129,7 +129,7 @@ export function InteractionButtons({
         disabled={isPending}
       >
         <ThumbsDown
-          className={cn('h-4 w-4', optimisticVote.currentUserVote === 'dislike' && 'text-destructive fill-destructive')}
+          className={cn('h-4 w-4', optimisticVote.currentUserVote === 'dislike' && 'text-primary fill-primary')}
         />
         <span>{formatCompactNumber(optimisticVote.dislikes)}</span>
       </Button>
