@@ -3,7 +3,7 @@
 
 import { getFirestore, Timestamp, FieldValue, OrderByDirection } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase/admin-sdk';
-import type { Anime, AnimeSerializable, Episode, EpisodeSerializable } from '@/types/anime';
+import type { Anime, AnimeSerializable, Episode, EpisodeSerializable, UserInteraction, UserInteractionSerializable } from '@/types/anime';
 
 // Use the Admin SDK's firestore instance
 const firestore = getFirestore(getAdminApp());
@@ -153,5 +153,30 @@ export async function getEpisodeById(animeId: string, episodeId: string): Promis
         title: data.title,
         videoUrl: data.videoUrl,
         createdAt: createdAt,
+    };
+}
+
+/**
+ * Fetches the interaction data for a specific user and anime.
+ * @param animeId The ID of the anime.
+ * @param userId The ID of the user.
+ * @returns A promise resolving to the user's interaction data or null if not found.
+ */
+export async function getUserInteraction(animeId: string, userId: string): Promise<UserInteractionSerializable | null> {
+    if (!animeId || !userId) {
+        return null;
+    }
+    const interactionRef = firestore.collection('animes').doc(animeId).collection('interactions').doc(userId);
+    const docSnap = await interactionRef.get();
+
+    if (!docSnap.exists) {
+        return null;
+    }
+
+    const data = docSnap.data() as UserInteraction;
+    
+    return {
+        vote: data.vote || null,
+        lastViewed: (data.lastViewed as Timestamp)?.toDate().toISOString() || null,
     };
 }

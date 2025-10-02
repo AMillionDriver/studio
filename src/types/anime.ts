@@ -28,8 +28,8 @@ export interface Anime {
     updatedAt: FieldValue | Timestamp;
     releaseDate?: FieldValue | Timestamp;
     views?: number;
-    likes?: number;
-    dislikes?: number;
+    likes: number;
+    dislikes: number;
 }
 
 // Type for a single episode document
@@ -52,6 +52,12 @@ export interface Comment {
     createdAt: FieldValue | Timestamp;
 }
 
+// Type for user-specific interaction with an anime
+export interface UserInteraction {
+    vote?: 'like' | 'dislike' | null;
+    lastViewed?: FieldValue | Timestamp;
+}
+
 
 // Type for data used in client components (serializable)
 export interface AnimeSerializable extends Omit<Anime, 'createdAt' | 'updatedAt' | 'releaseDate' | 'rating'> {
@@ -67,6 +73,10 @@ export interface EpisodeSerializable extends Omit<Episode, 'createdAt'> {
 
 export interface CommentSerializable extends Omit<Comment, 'createdAt'> {
     createdAt: string;
+}
+
+export interface UserInteractionSerializable extends Omit<UserInteraction, 'lastViewed'> {
+    lastViewed: string | null;
 }
 
 

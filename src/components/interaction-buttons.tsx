@@ -1,0 +1,134 @@
+
+'use client';
+
+import { useOptimistic, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
+import { ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
+import { formatCompactNumber } from '@/lib/utils';
+import { voteOnAnime } from '@/lib/anime.actions';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+
+interface InteractionButtonsProps {
+  animeId: string;
+  initialLikes: number;
+  initialDislikes: number;
+  initialViews: number;
+  userVote: 'like' | 'dislike' | null;
+  userId?: string | null;
+}
+
+type OptimisticVote = {
+  likes: number;
+  dislikes: number;
+  currentUserVote: 'like' | 'dislike' | null;
+};
+
+export function InteractionButtons({
+  animeId,
+  initialLikes,
+  initialDislikes,
+  initialViews,
+  userVote,
+  userId,
+}: InteractionButtonsProps) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const [optimisticVote, setOptimisticVote] = useOptimistic<OptimisticVote, 'like' | 'dislike'>(
+    {
+      likes: initialLikes,
+      dislikes: initialDislikes,
+      currentUserVote: userVote,
+    },
+    (state, action) => {
+      if (action === 'like') {
+        if (state.currentUserVote === 'like') {
+          // Undo like
+          return {
+            likes: state.likes - 1,
+            dislikes: state.dislikes,
+            currentUserVote: null,
+          };
+        }
+        // New like or changing from dislike
+        return {
+          likes: state.likes + 1,
+          dislikes: state.currentUserVote === 'dislike' ? state.dislikes - 1 : state.dislikes,
+          currentUserVote: 'like',
+        };
+      }
+      if (action === 'dislike') {
+        if (state.currentUserVote === 'dislike') {
+          // Undo dislike
+          return {
+            likes: state.likes,
+            dislikes: state.dislikes - 1,
+            currentUserVote: null,
+          };
+        }
+        // New dislike or changing from like
+        return {
+          likes: state.currentUserVote === 'like' ? state.likes - 1 : state.likes,
+          dislikes: state.dislikes + 1,
+          currentUserVote: 'dislike',
+        };
+      }
+      return state;
+    }
+  );
+
+  const handleVote = async (voteType: 'like' | 'dislike') => {
+    if (!userId) {
+       toast({
+         title: 'Login Diperlukan',
+         description: (
+            <span>
+              Anda harus <Link href="/login" className="underline font-bold">masuk</Link> untuk memberi suara.
+            </span>
+         ),
+         variant: 'destructive',
+       });
+      return;
+    }
+
+    startTransition(() => {
+      setOptimisticVote(voteType);
+      voteOnAnime(animeId, voteType);
+    });
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-4 my-4">
+      <div className="flex items-center gap-1 text-muted-foreground">
+        <Eye className="h-5 w-5" />
+        <span className="text-sm font-medium">{formatCompactNumber(initialViews)} views</span>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-2"
+        onClick={() => handleVote('like')}
+        disabled={isPending}
+      >
+        <ThumbsUp
+          className={cn('h-4 w-4', optimisticVote.currentUserVote === 'like' && 'text-primary fill-primary')}
+        />
+        <span>{formatCompactNumber(optimisticVote.likes)}</span>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-2"
+        onClick={() => handleVote('dislike')}
+        disabled={isPending}
+      >
+        <ThumbsDown
+          className={cn('h-4 w-4', optimisticVote.currentUserVote === 'dislike' && 'text-destructive fill-destructive')}
+        />
+        <span>{formatCompactNumber(optimisticVote.dislikes)}</span>
+      </Button>
+    </div>
+  );
+}

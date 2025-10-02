@@ -74,7 +74,9 @@
         "id",
         "title",
         "genre",
-        "releaseDate"
+        "releaseDate",
+        "likes",
+        "dislikes"
       ]
     },
     "Watchlist": {
@@ -139,6 +141,24 @@
         "authorId",
         "authorName"
       ]
+    },
+    "UserInteraction": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "User Interaction",
+        "type": "object",
+        "description": "Tracks a user's interaction with a specific anime, like votes and views.",
+        "properties": {
+            "vote": {
+                "type": ["string", "null"],
+                "enum": ["like", "dislike", null],
+                "description": "The user's vote on the anime."
+            },
+            "lastViewed": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp of when the user last viewed the anime."
+            }
+        }
     }
   },
   "auth": {
@@ -221,8 +241,28 @@
             }
           ]
         }
+      },
+       {
+        "path": "/animes/{animeId}/interactions/{userId}",
+        "definition": {
+          "entityName": "UserInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/UserInteraction"
+          },
+          "description": "Stores a user's specific interactions (votes, views) with an anime. Path-based ownership.",
+          "params": [
+            {
+              "name": "animeId",
+              "description": "The unique identifier for the anime."
+            },
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data is stored under `/users/{userId}`, providing a clear ownership model. Watchlists are nested under users (`/users/{userId}/watchlists/{watchlistId}`) to maintain the user-watchlist relationship and simplify security rules based on user ownership. Anime data is stored in a flat `/animes/{animeId}` collection. Comments are stored in a subcollection under each anime document (`/animes/{animeId}/comments/{commentId}`), including denormalized author data for efficient read operations. This denormalization allows for efficient querying and avoids the need for complex `get()` calls in security rules, enabling performant display of comment lists."
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data is stored under `/users/{userId}`, providing a clear ownership model. Watchlists are nested under users (`/users/{userId}/watchlists/{watchlistId}`) to maintain the user-watchlist relationship and simplify security rules based on user ownership. Anime data is stored in a flat `/animes/{animeId}` collection. Comments are stored in a subcollection under each anime document (`/animes/{animeId}/comments/{commentId}`), including denormalized author data for efficient read operations. User interactions like votes are stored in a separate subcollection `/animes/{animeId}/interactions/{userId}` to efficiently track individual user actions and enforce one-vote-per-user rules."
   }
 }

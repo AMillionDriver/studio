@@ -3,9 +3,10 @@
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase/admin-sdk';
-import type { Anime, AnimeRating } from '@/types/anime';
+import type { Anime, AnimeRating, UserInteraction } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
+import { getSession } from './session';
 
 const firestore = getFirestore(getAdminApp());
 
@@ -233,49 +234,94 @@ export async function deleteAnime(animeId: string): Promise<{ success: boolean; 
 }
 
 /**
- * Increments the view count for a specific anime.
- * @param animeId The ID of the anime to update.
+ * Increments the view count for an anime if it hasn't been viewed by the user recently.
+ * @param animeId The ID of the anime.
+ * @param userId The ID of the user.
  */
-export async function incrementAnimeViews(animeId: string): Promise<void> {
-  if (!animeId) return;
+export async function incrementAnimeViews(animeId: string, userId: string): Promise<void> {
+  if (!animeId || !userId) return;
+
+  const interactionRef = firestore.collection('animes').doc(animeId).collection('interactions').doc(userId);
   const animeRef = firestore.collection('animes').doc(animeId);
+  const viewCooldown = 60 * 60 * 1000; // 1 hour in milliseconds
+
   try {
-    await animeRef.update({ views: FieldValue.increment(1) });
-    // No need to revalidate here as it's a non-critical counter update
+    await firestore.runTransaction(async (transaction) => {
+      const interactionDoc = await transaction.get(interactionRef);
+      const now = Timestamp.now();
+
+      if (interactionDoc.exists) {
+        const data = interactionDoc.data() as UserInteraction;
+        const lastViewed = data.lastViewed as Timestamp | undefined;
+        
+        if (lastViewed && (now.toMillis() - lastViewed.toMillis()) < viewCooldown) {
+          // Cooldown active, don't increment views
+          return;
+        }
+        // Cooldown expired, update lastViewed
+        transaction.update(interactionRef, { lastViewed: now });
+      } else {
+        // First interaction, set lastViewed
+        transaction.set(interactionRef, { lastViewed: now }, { merge: true });
+      }
+
+      // If we got this far, increment views
+      transaction.update(animeRef, { views: FieldValue.increment(1) });
+    });
+    revalidatePath(`/watch/${animeId}`);
   } catch (error) {
     console.error(`Error incrementing views for anime ${animeId}:`, error);
-    // Fail silently, not critical for user experience
   }
 }
 
 /**
- * Increments the like count for a specific anime.
- * @param animeId The ID of the anime to update.
+ * Handles a user's vote (like or dislike) on an anime.
+ * @param animeId The ID of the anime being voted on.
+ * @param newVote The new vote type, 'like' or 'dislike'.
  */
-export async function likeAnime(animeId: string): Promise<void> {
-  if (!animeId) return;
-  const animeRef = firestore.collection('animes').doc(animeId);
-  try {
-    await animeRef.update({ likes: FieldValue.increment(1) });
-    revalidatePath(`/watch/${animeId}`); // Revalidate the page to show new count
-  } catch (error) {
-    console.error(`Error liking anime ${animeId}:`, error);
-    // Fail silently
-  }
-}
+export async function voteOnAnime(animeId: string, newVote: 'like' | 'dislike'): Promise<{success: boolean, error?: string}> {
+  const session = await getSession();
+  const userId = session?.uid;
 
-/**
- * Increments the dislike count for a specific anime.
- * @param animeId The ID of the anime to update.
- */
-export async function dislikeAnime(animeId: string): Promise<void> {
-  if (!animeId) return;
+  if (!userId) {
+    return { success: false, error: 'User not authenticated.' };
+  }
+
   const animeRef = firestore.collection('animes').doc(animeId);
+  const interactionRef = firestore.collection('animes').doc(animeId).collection('interactions').doc(userId);
+
   try {
-    await animeRef.update({ dislikes: FieldValue.increment(1) });
-    revalidatePath(`/watch/${animeId}`); // Revalidate the page to show new count
-  } catch (error) {
-    console.error(`Error disliking anime ${animeId}:`, error);
-    // Fail silently
+    await firestore.runTransaction(async (transaction) => {
+      const interactionDoc = await transaction.get(interactionRef);
+      const currentVote = interactionDoc.exists ? (interactionDoc.data() as UserInteraction).vote : null;
+
+      const updates: { [key: string]: FieldValue } = {};
+      let finalVote: 'like' | 'dislike' | null = newVote;
+
+      if (currentVote === newVote) {
+        // User is undoing their vote
+        updates[`${newVote}s`] = FieldValue.increment(-1);
+        finalVote = null; // Clear the vote
+      } else {
+        // New vote or changing vote
+        updates[`${newVote}s`] = FieldValue.increment(1);
+        if (currentVote) {
+          // Changing vote, so decrement the old one
+          updates[`${currentVote}s`] = FieldValue.increment(-1);
+        }
+      }
+
+      // Update the anime document with new like/dislike counts
+      transaction.update(animeRef, updates);
+      
+      // Update the user's interaction document
+      transaction.set(interactionRef, { vote: finalVote }, { merge: true });
+    });
+
+    revalidatePath(`/watch/${animeId}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Error processing vote for anime ${animeId}:`, error);
+    return { success: false, error: 'Failed to process vote.' };
   }
 }

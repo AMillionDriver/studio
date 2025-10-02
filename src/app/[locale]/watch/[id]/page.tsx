@@ -1,9 +1,9 @@
 
-import { getAnimeById, getAnimes, getEpisodesForAnime } from '@/lib/data';
+import { getAnimeById, getAnimes, getEpisodesForAnime, getUserInteraction } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook, Shield, ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
+import { Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook, Shield } from 'lucide-react';
 import { RelatedAnime } from '@/components/related-anime';
 import { EpisodeSelector } from '@/components/episode-selector';
 import { Separator } from '@/components/ui/separator';
@@ -15,20 +15,25 @@ import { Suspense } from 'react';
 import Loading from './loading';
 import { ExpandableText } from '@/components/expandable-text';
 import { CommentSection } from '@/components/comments/comment-section';
-import { incrementAnimeViews, likeAnime, dislikeAnime } from '@/lib/anime.actions';
-import { formatCompactNumber } from '@/lib/utils';
+import { getSession } from '@/lib/session';
+import { InteractionButtons } from '@/components/interaction-buttons';
+import { incrementAnimeViews } from '@/lib/anime.actions';
 
 async function WatchPageContent({ animeId }: { animeId: string }) {
     if (!animeId) {
         notFound();
     }
+    
+    const session = await getSession();
 
     // Increment views and fetch data in parallel
-    const [anime, episodes, allAnimes] = await Promise.all([
+    // The increment function now internally checks if it should increment
+    const [anime, episodes, allAnimes, userInteraction] = await Promise.all([
         getAnimeById(animeId),
         getEpisodesForAnime(animeId),
         getAnimes(),
-        incrementAnimeViews(animeId)
+        session?.uid ? getUserInteraction(animeId, session.uid) : Promise.resolve(null),
+        session?.uid ? incrementAnimeViews(animeId, session.uid) : Promise.resolve(),
     ]);
 
     if (!anime) {
@@ -77,24 +82,14 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                             )}
                         </div>
 
-                         <div className="flex flex-wrap items-center gap-4 my-4">
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                                <Eye className="h-5 w-5" />
-                                <span className="text-sm font-medium">{formatCompactNumber(anime.views || 0)} views</span>
-                            </div>
-                             <form action={likeAnime.bind(null, anime.id)} className="flex items-center">
-                                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span>{formatCompactNumber(anime.likes || 0)}</span>
-                                </Button>
-                            </form>
-                             <form action={dislikeAnime.bind(null, anime.id)} className="flex items-center">
-                                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                                    <ThumbsDown className="h-4 w-4" />
-                                     <span>{formatCompactNumber(anime.dislikes || 0)}</span>
-                                </Button>
-                            </form>
-                        </div>
+                        <InteractionButtons
+                            animeId={anime.id}
+                            initialLikes={anime.likes || 0}
+                            initialDislikes={anime.dislikes || 0}
+                            initialViews={anime.views || 0}
+                            userVote={userInteraction?.vote || null}
+                            userId={session?.uid}
+                        />
                         
                         <ExpandableText text={anime.description} maxLength={300} />
 
@@ -176,4 +171,3 @@ export default function WatchPage({ params }: { params: { id: string } }) {
         </div>
     );
 }
-
