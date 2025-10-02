@@ -95,7 +95,6 @@ export function InteractionButtons({
 
     startTransition(() => {
       setOptimisticVote(voteType);
-      // Pass the user's ID token for server-side verification
       // user from useAuth() is the full client-side User object with getIdToken()
       user.getIdToken().then(idToken => {
         voteOnAnime(animeId, voteType, idToken);
