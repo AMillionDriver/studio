@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, Tv, Calendar, Clapperboard, VenetianMask, Youtube, Instagram, Facebook, Shield } from 'lucide-react';
-import { PersonalizedRecommendations } from '@/components/personalized-recommendations';
+import { RelatedAnime } from '@/components/related-anime';
 import { EpisodeSelector } from '@/components/episode-selector';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -132,11 +132,11 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                 <CommentSection animeId={anime.id} />
             </div>
 
-            {/* Personalized Recommendations Sidebar */}
+            {/* Related Anime Sidebar */}
             <div className="lg:col-span-1">
-                <PersonalizedRecommendations 
-                    watchedAnime={anime}
-                    recommendationPool={recommendationPool}
+                <RelatedAnime 
+                    currentAnime={anime}
+                    allAnimes={recommendationPool}
                 />
             </div>
         </div>
@@ -152,3 +152,5 @@ export default function WatchPage({ params }: { params: { id: string } }) {
         </div>
     );
 }
+
+    
