@@ -1,10 +1,10 @@
 
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { 
   getAuth, 
-  onAuthStateChanged, 
+  onIdTokenChanged, 
   User, 
   GoogleAuthProvider, 
   signInWithPopup, 
@@ -82,10 +82,29 @@ const formatAuthError = (errorCode: string): string => {
 
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { user, loading: sessionLoading, forceRefresh } = useSession();
+  const [user, setUser] = useState<AppUser | null>(null);
+  const { loading: sessionLoading, forceRefresh } = useSession();
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  
+  useEffect(() => {
+    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
+      setAuthLoading(true);
+      if (firebaseUser) {
+        const idTokenResult = await firebaseUser.getIdTokenResult();
+        const isAdmin = idTokenResult.claims.admin === true;
+        setUser({ ...firebaseUser, isAdmin });
+      } else {
+        setUser(null);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
 
   const handleAuthSuccess = async (redirectPath: string = '/') => {
     await forceRefresh(); // Force session refresh after login
@@ -263,7 +282,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = { 
     user: user, 
-    loading: loading || sessionLoading, // Combine loading states
+    loading: loading || authLoading, // Combine loading states
     signInWithGoogle, 
     signOut, 
     signUpWithEmail, 
