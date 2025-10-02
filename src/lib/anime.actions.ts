@@ -74,6 +74,9 @@ export async function addAnime(formData: FormData): Promise<{ success: boolean; 
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       releaseDate: releaseDate,
+      views: 0,
+      likes: 0,
+      dislikes: 0,
     };
 
     if (creatorName) {
@@ -227,4 +230,52 @@ export async function deleteAnime(animeId: string): Promise<{ success: boolean; 
         console.error(`Error deleting anime ${animeId}:`, error);
         return { success: false, error: `Failed to delete anime: ${error.message}` };
     }
+}
+
+/**
+ * Increments the view count for a specific anime.
+ * @param animeId The ID of the anime to update.
+ */
+export async function incrementAnimeViews(animeId: string): Promise<void> {
+  if (!animeId) return;
+  const animeRef = firestore.collection('animes').doc(animeId);
+  try {
+    await animeRef.update({ views: FieldValue.increment(1) });
+    // No need to revalidate here as it's a non-critical counter update
+  } catch (error) {
+    console.error(`Error incrementing views for anime ${animeId}:`, error);
+    // Fail silently, not critical for user experience
+  }
+}
+
+/**
+ * Increments the like count for a specific anime.
+ * @param animeId The ID of the anime to update.
+ */
+export async function likeAnime(animeId: string): Promise<void> {
+  if (!animeId) return;
+  const animeRef = firestore.collection('animes').doc(animeId);
+  try {
+    await animeRef.update({ likes: FieldValue.increment(1) });
+    revalidatePath(`/watch/${animeId}`); // Revalidate the page to show new count
+  } catch (error) {
+    console.error(`Error liking anime ${animeId}:`, error);
+    // Fail silently
+  }
+}
+
+/**
+ * Increments the dislike count for a specific anime.
+ * @param animeId The ID of the anime to update.
+ */
+export async function dislikeAnime(animeId: string): Promise<void> {
+  if (!animeId) return;
+  const animeRef = firestore.collection('animes').doc(animeId);
+  try {
+    await animeRef.update({ dislikes: FieldValue.increment(1) });
+    revalidatePath(`/watch/${animeId}`); // Revalidate the page to show new count
+  } catch (error) {
+    console.error(`Error disliking anime ${animeId}:`, error);
+    // Fail silently
+  }
 }

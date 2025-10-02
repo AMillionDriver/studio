@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -55,6 +56,18 @@
           "type": "string",
           "description": "The release date of the anime.",
           "format": "date-time"
+        },
+        "views": {
+            "type": "number",
+            "description": "Total number of views for the anime."
+        },
+        "likes": {
+            "type": "number",
+            "description": "Total number of likes for the anime."
+        },
+        "dislikes": {
+            "type": "number",
+            "description": "Total number of dislikes for the anime."
         }
       },
       "required": [

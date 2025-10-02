@@ -27,6 +27,9 @@ export interface Anime {
     createdAt: FieldValue | Timestamp;
     updatedAt: FieldValue | Timestamp;
     releaseDate?: FieldValue | Timestamp;
+    views?: number;
+    likes?: number;
+    dislikes?: number;
 }
 
 // Type for a single episode document

@@ -33,7 +33,10 @@ function docToAnimeSerializable(doc: FirebaseFirestore.DocumentSnapshot<Firebase
         episodes: data.episodes,
         createdAt: createdAt,
         updatedAt: updatedAt,
-        releaseDate: releaseDate
+        releaseDate: releaseDate,
+        views: data.views || 0,
+        likes: data.likes || 0,
+        dislikes: data.dislikes || 0,
     };
 }
 

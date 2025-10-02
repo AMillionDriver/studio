@@ -49,3 +49,19 @@ export const getInitials = (name: string | null | undefined): string => {
     const initials = names.map(n => n[0]).join('');
     return initials.toUpperCase().slice(0, 2);
 };
+
+/**
+ * Formats a number into a compact, readable format (e.g., 1.2K, 5M).
+ * @param number The number to format.
+ * @returns A formatted string.
+ */
+export function formatCompactNumber(number: number): string {
+    if (number === null || number === undefined) return '0';
+    
+    const formatter = new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        compactDisplay: 'short',
+    });
+    
+    return formatter.format(number);
+}
