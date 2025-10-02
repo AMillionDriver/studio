@@ -95,7 +95,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (firebaseUser) {
         const idTokenResult = await firebaseUser.getIdTokenResult();
         const isAdmin = idTokenResult.claims.admin === true;
-        setUser({ ...firebaseUser, isAdmin });
+        // This is the fix: Do not spread the user object.
+        // Instead, cast it and assign the property.
+        const appUser: AppUser = firebaseUser;
+        appUser.isAdmin = isAdmin;
+        setUser(appUser);
       } else {
         setUser(null);
       }
