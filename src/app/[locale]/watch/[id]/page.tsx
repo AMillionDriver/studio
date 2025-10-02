@@ -18,7 +18,7 @@ import { CommentSection } from '@/components/comments/comment-section';
 import { getSession } from '@/lib/session';
 import { InteractionButtons } from '@/components/interaction-buttons';
 import { incrementAnimeViews } from '@/lib/anime.actions';
-import { AppUser } from '@/contexts/auth-context';
+import { AppUser } from '@/contexts/session-context';
 
 async function WatchPageContent({ animeId }: { animeId: string }) {
     if (!animeId) {
