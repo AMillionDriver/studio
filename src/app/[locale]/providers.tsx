@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState, type ReactNode } from 'react';
 import Header from '@/components/layout/header';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { SessionProvider } from '@/contexts/session-context';
 
 // This is a Client Component, responsible for rendering the main body and handling client-side state.
 function AppBody({ children }: { children: ReactNode }) {
@@ -57,11 +58,13 @@ export function AppProviders({
         enableSystem
         disableTransitionOnChange
       >
-        <AuthProvider>
-          <AppBody>
-            {children}
-          </AppBody>
-        </AuthProvider>
+        <SessionProvider>
+          <AuthProvider>
+            <AppBody>
+              {children}
+            </AppBody>
+          </AuthProvider>
+        </SessionProvider>
       </ThemeProvider>
     </I18nProviderClient>
   );

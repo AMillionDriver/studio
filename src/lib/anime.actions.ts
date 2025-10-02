@@ -6,9 +6,11 @@ import { getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeRating, UserInteraction } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
-import { getSession } from './session';
+import { getAuth } from 'firebase-admin/auth';
+
 
 const firestore = getFirestore(getAdminApp());
+const auth = getAuth(getAdminApp());
 
 /**
  * Adds a new anime document to Firestore using the Admin SDK.
@@ -278,12 +280,15 @@ export async function incrementAnimeViews(animeId: string, userId: string): Prom
  * Handles a user's vote (like or dislike) on an anime.
  * @param animeId The ID of the anime being voted on.
  * @param newVote The new vote type, 'like' or 'dislike'.
+ * @param idToken The user's ID token for authentication.
  */
-export async function voteOnAnime(animeId: string, newVote: 'like' | 'dislike'): Promise<{success: boolean, error?: string}> {
-  const session = await getSession();
-  const userId = session?.uid;
-
-  if (!userId) {
+export async function voteOnAnime(animeId: string, newVote: 'like' | 'dislike', idToken: string): Promise<{success: boolean, error?: string}> {
+  let userId: string;
+  try {
+    const decodedToken = await auth.verifyIdToken(idToken);
+    userId = decodedToken.uid;
+  } catch (error) {
+    console.error("Invalid ID Token:", error);
     return { success: false, error: 'User not authenticated.' };
   }
 

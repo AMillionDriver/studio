@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
+import { useOptimistic, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
 import { formatCompactNumber } from '@/lib/utils';
@@ -9,14 +9,14 @@ import { voteOnAnime } from '@/lib/anime.actions';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 interface InteractionButtonsProps {
   animeId: string;
   initialLikes: number;
   initialDislikes: number;
   initialViews: number;
-  userVote: 'like' | 'dislike' | null;
-  userId?: string | null;
+  initialUserVote: 'like' | 'dislike' | null;
 }
 
 type OptimisticVote = {
@@ -30,17 +30,17 @@ export function InteractionButtons({
   initialLikes,
   initialDislikes,
   initialViews,
-  userVote,
-  userId,
+  initialUserVote,
 }: InteractionButtonsProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { user } = useAuth(); // Use client-side auth context
 
   const [optimisticVote, setOptimisticVote] = useOptimistic<OptimisticVote, 'like' | 'dislike'>(
     {
       likes: initialLikes,
       dislikes: initialDislikes,
-      currentUserVote: userVote,
+      currentUserVote: initialUserVote,
     },
     (state, action) => {
       if (action === 'like') {
@@ -80,7 +80,7 @@ export function InteractionButtons({
   );
 
   const handleVote = async (voteType: 'like' | 'dislike') => {
-    if (!userId) {
+    if (!user) {
        toast({
          title: 'Login Diperlukan',
          description: (
@@ -95,7 +95,10 @@ export function InteractionButtons({
 
     startTransition(() => {
       setOptimisticVote(voteType);
-      voteOnAnime(animeId, voteType);
+      // Pass the user's ID token for server-side verification
+      user.getIdToken().then(idToken => {
+        voteOnAnime(animeId, voteType, idToken);
+      });
     });
   };
 

@@ -18,16 +18,17 @@ import { CommentSection } from '@/components/comments/comment-section';
 import { getSession } from '@/lib/session';
 import { InteractionButtons } from '@/components/interaction-buttons';
 import { incrementAnimeViews } from '@/lib/anime.actions';
+import { AppUser } from '@/contexts/auth-context';
 
 async function WatchPageContent({ animeId }: { animeId: string }) {
     if (!animeId) {
         notFound();
     }
     
-    const session = await getSession();
+    // We get the session here to perform server-side actions like incrementing views
+    const session = (await getSession()) as AppUser | null;
 
     // Increment views and fetch data in parallel
-    // The increment function now internally checks if it should increment
     const [anime, episodes, allAnimes, userInteraction] = await Promise.all([
         getAnimeById(animeId),
         getEpisodesForAnime(animeId),
@@ -82,13 +83,13 @@ async function WatchPageContent({ animeId }: { animeId: string }) {
                             )}
                         </div>
 
+                        {/* InteractionButtons now gets userId from the client-side useAuth hook */}
                         <InteractionButtons
                             animeId={anime.id}
                             initialLikes={anime.likes || 0}
                             initialDislikes={anime.dislikes || 0}
                             initialViews={anime.views || 0}
-                            userVote={userInteraction?.vote || null}
-                            userId={session?.uid}
+                            initialUserVote={userInteraction?.vote || null}
                         />
                         
                         <ExpandableText text={anime.description} maxLength={300} />

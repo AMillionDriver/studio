@@ -25,23 +25,9 @@ import { app } from '@/lib/firebase/sdk';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { uploadProfilePicture } from '@/lib/firebase/storage';
+import { useSession } from './session-context';
 
 const auth = getAuth(app);
-
-// This is a workaround to store the session cookie
-// on the client side for server components to access.
-async function setSessionCookie(user: User) {
-    const idToken = await user.getIdToken(true); // Force refresh
-    await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-    });
-}
-
-async function removeSessionCookie() {
-    await fetch("/api/auth/session", { method: "DELETE" });
-}
 
 export interface AppUser extends User {
   isAdmin?: boolean;
@@ -96,33 +82,13 @@ const formatAuthError = (errorCode: string): string => {
 
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: sessionLoading, forceRefresh } = useSession();
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        // Force refresh the token to get the latest custom claims.
-        const idTokenResult = await firebaseUser.getIdTokenResult(true);
-        const isAdmin = idTokenResult.claims.admin === true;
-        
-        // Pass the refreshed token to the session cookie endpoint.
-        await setSessionCookie(firebaseUser);
-
-        setUser({ ...firebaseUser, isAdmin });
-      } else {
-        await removeSessionCookie();
-        setUser(null);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleAuthSuccess = (redirectPath: string = '/') => {
+  const handleAuthSuccess = async (redirectPath: string = '/') => {
+    await forceRefresh(); // Force session refresh after login
     router.push(redirectPath);
     toast({
       title: "Login Berhasil",
@@ -154,9 +120,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      handleAuthSuccess();
+      await handleAuthSuccess();
     } catch (error: any) {
       handleAuthError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,9 +132,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
-      handleAuthSuccess();
+      await handleAuthSuccess();
     } catch (error: any) {
       handleAuthError(error);
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -174,9 +144,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      handleAuthSuccess();
+      await handleAuthSuccess();
     } catch (error: any) {
       handleAuthError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -184,9 +156,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       await firebaseSignInAnonymously(auth);
-      handleAuthSuccess();
+      await handleAuthSuccess();
     } catch (error: any) {
       handleAuthError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,14 +181,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const changeUserPassword = async (oldPass: string, newPass: string) => {
-    if (!user || !user.email) {
+    if (!auth.currentUser || !auth.currentUser.email) {
         toast({ title: "Error", description: "No user is currently signed in.", variant: "destructive" });
         return;
     }
     try {
-        const credential = EmailAuthProvider.credential(user.email, oldPass);
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPass);
+        const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPass);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        await updatePassword(auth.currentUser, newPass);
         toast({ title: "Password Updated", description: "Your password has been changed successfully." });
     } catch (error: any) {
         toast({ title: "Password Change Failed", description: formatAuthError(error.code), variant: "destructive" });
@@ -238,9 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         photoURL: photoURL,
       });
 
-      const idTokenResult = await auth.currentUser.getIdTokenResult(true);
-
-      setUser({ ...auth.currentUser, isAdmin: idTokenResult.claims.admin === true });
+      await forceRefresh(); // Force session refresh after profile update
 
       toast({
         title: "Profil Diperbarui",
@@ -265,6 +237,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const provider = new GoogleAuthProvider();
     try {
       await linkWithPopup(auth.currentUser, provider);
+      await forceRefresh(); // Force session refresh after linking
       toast({
         title: "Akun Berhasil Ditautkan",
         description: "Akun Google Anda telah berhasil ditautkan.",
@@ -279,6 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
+      await forceRefresh(); // Force session refresh on sign out
       router.push('/login');
       toast({ title: "Logout Berhasil" });
     } catch (error: any) {
@@ -288,8 +262,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const value = { 
-    user, 
-    loading, 
+    user: user, 
+    loading: loading || sessionLoading, // Combine loading states
     signInWithGoogle, 
     signOut, 
     signUpWithEmail, 
