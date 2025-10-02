@@ -2,11 +2,31 @@
 'use server';
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getAdminApp } from './firebase/admin-sdk';
+import type { Firestore } from 'firebase-admin/firestore';
+import { FirebaseAdminInitializationError, getAdminApp } from './firebase/admin-sdk';
 import type { EpisodeFormData, EpisodeUpdateFormData } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 
-const firestore = getFirestore(getAdminApp());
+let firestore: Firestore | null = null;
+
+function getFirestoreInstance(): Firestore | null {
+  if (firestore) {
+    return firestore;
+  }
+
+  try {
+    firestore = getFirestore(getAdminApp());
+    return firestore;
+  } catch (error) {
+    if (error instanceof FirebaseAdminInitializationError) {
+      console.warn('[firebase-admin] Firestore is not available:', error.message);
+      return null;
+    }
+    throw error;
+  }
+}
+
+const FIREBASE_CONFIG_ERROR = 'Firebase Admin SDK is not configured. Please set the required environment variables.';
 
 /**
  * Adds a new episode to an anime's subcollection in Firestore.
@@ -18,6 +38,11 @@ export async function addEpisodeToAnime(
   animeId: string,
   formData: EpisodeFormData
 ): Promise<{ success: boolean; error?: string }> {
+  const firestore = getFirestoreInstance();
+  if (!firestore) {
+    return { success: false, error: FIREBASE_CONFIG_ERROR };
+  }
+
   const { episodeNumber, title, videoUrl } = formData;
 
   if (!animeId || !episodeNumber || !title || !videoUrl) {
@@ -89,6 +114,11 @@ export async function updateEpisode(
         return { success: false, error: 'Missing required fields for update.' };
     }
 
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return { success: false, error: FIREBASE_CONFIG_ERROR };
+    }
+
     try {
         const episodeRef = firestore.collection('animes').doc(animeId).collection('episodes').doc(episodeId);
 
@@ -122,6 +152,11 @@ export async function deleteEpisode(
 ): Promise<{ success: boolean; error?: string }> {
     if (!animeId || !episodeId) {
         return { success: false, error: 'Anime ID and Episode ID are required.' };
+    }
+
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return { success: false, error: FIREBASE_CONFIG_ERROR };
     }
 
     const batch = firestore.batch();

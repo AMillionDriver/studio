@@ -1,6 +1,6 @@
 
 import { getAuth } from "firebase-admin/auth";
-import { getAdminApp } from "@/lib/firebase/admin-sdk";
+import { FirebaseAdminInitializationError, getAdminApp } from "@/lib/firebase/admin-sdk";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -22,6 +22,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ status: "success" });
     } catch (error) {
         console.error("Error creating session cookie:", error);
+        if (error instanceof FirebaseAdminInitializationError) {
+            return NextResponse.json(
+                { status: "error", message: "Firebase Admin SDK is not configured." },
+                { status: 500 }
+            );
+        }
         return NextResponse.json({ status: "error" }, { status: 401 });
     }
 }
