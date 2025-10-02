@@ -2,15 +2,53 @@
 'use server';
 
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getAdminApp } from './firebase/admin-sdk';
+import type { Firestore } from 'firebase-admin/firestore';
+import { FirebaseAdminInitializationError, getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeRating, UserInteraction } from '@/types/anime';
 import { revalidatePath } from 'next/cache';
 import { uploadAnimeCover } from './firebase/storage';
 import { getAuth } from 'firebase-admin/auth';
+import type { Auth } from 'firebase-admin/auth';
 
 
-const firestore = getFirestore(getAdminApp());
-const auth = getAuth(getAdminApp());
+let firestore: Firestore | null = null;
+let auth: Auth | null = null;
+
+function getFirestoreInstance(): Firestore | null {
+  if (firestore) {
+    return firestore;
+  }
+
+  try {
+    firestore = getFirestore(getAdminApp());
+    return firestore;
+  } catch (error) {
+    if (error instanceof FirebaseAdminInitializationError) {
+      console.warn('[firebase-admin] Firestore is not available:', error.message);
+      return null;
+    }
+    throw error;
+  }
+}
+
+function getAuthInstance(): Auth | null {
+  if (auth) {
+    return auth;
+  }
+
+  try {
+    auth = getAuth(getAdminApp());
+    return auth;
+  } catch (error) {
+    if (error instanceof FirebaseAdminInitializationError) {
+      console.warn('[firebase-admin] Auth is not available:', error.message);
+      return null;
+    }
+    throw error;
+  }
+}
+
+const FIREBASE_CONFIG_ERROR = 'Firebase Admin SDK is not configured. Please set the required environment variables.';
 
 /**
  * Adds a new anime document to Firestore using the Admin SDK.
@@ -20,7 +58,12 @@ const auth = getAuth(getAdminApp());
  * @returns An object indicating success or failure.
  */
 export async function addAnime(formData: FormData): Promise<{ success: boolean; docId?: string; error?: string }> {
-  
+  const firestore = getFirestoreInstance();
+
+  if (!firestore) {
+    return { success: false, error: FIREBASE_CONFIG_ERROR };
+  }
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const streamUrl = formData.get('streamUrl') as string;
@@ -129,6 +172,11 @@ export async function updateAnime(animeId: string, formData: FormData): Promise<
   if (!animeId) {
     return { success: false, error: 'Anime ID is required for an update.' };
   }
+
+  const firestore = getFirestoreInstance();
+  if (!firestore) {
+    return { success: false, error: FIREBASE_CONFIG_ERROR };
+  }
   
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
@@ -215,6 +263,11 @@ export async function deleteAnime(animeId: string): Promise<{ success: boolean; 
     if (!animeId) {
         return { success: false, error: 'Anime ID is required.' };
     }
+
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return { success: false, error: FIREBASE_CONFIG_ERROR };
+    }
     try {
         const animeEpisodesQuery = firestore.collection('animes').doc(animeId).collection('episodes');
         const episodesSnapshot = await animeEpisodesQuery.get();
@@ -242,6 +295,12 @@ export async function deleteAnime(animeId: string): Promise<{ success: boolean; 
  */
 export async function incrementAnimeViews(animeId: string, userId: string): Promise<void> {
   if (!animeId || !userId) return;
+
+  const firestore = getFirestoreInstance();
+  if (!firestore) {
+    console.warn('[firebase-admin] Skipping view increment because Firestore is not available.');
+    return;
+  }
 
   const interactionRef = firestore.collection('animes').doc(animeId).collection('interactions').doc(userId);
   const animeRef = firestore.collection('animes').doc(animeId);
@@ -283,6 +342,13 @@ export async function incrementAnimeViews(animeId: string, userId: string): Prom
  * @param idToken The user's ID token for authentication.
  */
 export async function voteOnAnime(animeId: string, newVote: 'like' | 'dislike', idToken: string): Promise<{success: boolean, error?: string}> {
+  const firestore = getFirestoreInstance();
+  const auth = getAuthInstance();
+
+  if (!firestore || !auth) {
+    return { success: false, error: FIREBASE_CONFIG_ERROR };
+  }
+
   let userId: string;
   try {
     const decodedToken = await auth.verifyIdToken(idToken);

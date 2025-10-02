@@ -2,13 +2,51 @@
 'use server';
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getAdminApp } from '@/lib/firebase/admin-sdk';
+import type { Firestore } from 'firebase-admin/firestore';
+import { FirebaseAdminInitializationError, getAdminApp } from '@/lib/firebase/admin-sdk';
 import { revalidatePath } from 'next/cache';
 import { getAuth } from 'firebase-admin/auth';
+import type { Auth } from 'firebase-admin/auth';
 import type { Comment } from '@/types/anime';
 
-const firestore = getFirestore(getAdminApp());
-const auth = getAuth(getAdminApp());
+let firestore: Firestore | null = null;
+let auth: Auth | null = null;
+
+function getFirestoreInstance(): Firestore | null {
+  if (firestore) {
+    return firestore;
+  }
+
+  try {
+    firestore = getFirestore(getAdminApp());
+    return firestore;
+  } catch (error) {
+    if (error instanceof FirebaseAdminInitializationError) {
+      console.warn('[firebase-admin] Firestore is not available:', error.message);
+      return null;
+    }
+    throw error;
+  }
+}
+
+function getAuthInstance(): Auth | null {
+  if (auth) {
+    return auth;
+  }
+
+  try {
+    auth = getAuth(getAdminApp());
+    return auth;
+  } catch (error) {
+    if (error instanceof FirebaseAdminInitializationError) {
+      console.warn('[firebase-admin] Auth is not available:', error.message);
+      return null;
+    }
+    throw error;
+  }
+}
+
+const FIREBASE_CONFIG_ERROR = 'Firebase Admin SDK is not configured. Please set the required environment variables.';
 
 // This server action is kept for potential future use where admin-level operations might be needed.
 // The primary comment submission logic has been moved to the client for detailed error handling.
@@ -22,6 +60,13 @@ export async function addComment(animeId: string, formData: FormData): Promise<{
 
   if (!idToken) {
     return { success: false, error: 'Pengguna tidak terautentikasi.' };
+  }
+
+  const firestore = getFirestoreInstance();
+  const auth = getAuthInstance();
+
+  if (!firestore || !auth) {
+    return { success: false, error: FIREBASE_CONFIG_ERROR };
   }
 
   try {

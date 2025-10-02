@@ -2,11 +2,28 @@
 'use server';
 
 import { getFirestore, Timestamp, FieldValue, OrderByDirection } from 'firebase-admin/firestore';
-import { getAdminApp } from './firebase/admin-sdk';
+import type { Firestore } from 'firebase-admin/firestore';
+import { FirebaseAdminInitializationError, getAdminApp } from './firebase/admin-sdk';
 import type { Anime, AnimeSerializable, Episode, EpisodeSerializable, UserInteraction, UserInteractionSerializable } from '@/types/anime';
 
-// Use the Admin SDK's firestore instance
-const firestore = getFirestore(getAdminApp());
+let firestore: Firestore | null = null;
+
+function getFirestoreInstance(): Firestore | null {
+    if (firestore) {
+        return firestore;
+    }
+
+    try {
+        firestore = getFirestore(getAdminApp());
+        return firestore;
+    } catch (error) {
+        if (error instanceof FirebaseAdminInitializationError) {
+            console.warn('[firebase-admin] Firestore is not available:', error.message);
+            return null;
+        }
+        throw error;
+    }
+}
 
 /**
  * Converts a Firestore document snapshot from the Admin SDK to a serializable Anime object.
@@ -54,6 +71,11 @@ export async function getAnimes(
     sortField: keyof Anime = 'createdAt',
     sortDirection: OrderByDirection = 'desc'
 ): Promise<AnimeSerializable[]> {
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return [];
+    }
+
     const animesCollection = firestore.collection('animes');
     let q: FirebaseFirestore.Query = animesCollection.orderBy(sortField, sortDirection);
     
@@ -84,6 +106,11 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
     if (!id) {
         return null;
     }
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return null;
+    }
+
     const docRef = firestore.collection('animes').doc(id);
     const docSnap = await docRef.get();
 
@@ -101,6 +128,11 @@ export async function getAnimeById(id: string): Promise<AnimeSerializable | null
  */
 export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSerializable[]> {
     if (!animeId) return [];
+
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return [];
+    }
 
     const episodesCollection = firestore.collection('animes').doc(animeId).collection('episodes');
     const q = episodesCollection.orderBy('episodeNumber', 'asc');
@@ -136,6 +168,11 @@ export async function getEpisodesForAnime(animeId: string): Promise<EpisodeSeria
 export async function getEpisodeById(animeId: string, episodeId: string): Promise<EpisodeSerializable | null> {
     if (!animeId || !episodeId) return null;
 
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
+        return null;
+    }
+
     const episodeRef = firestore.collection('animes').doc(animeId).collection('episodes').doc(episodeId);
     const docSnap = await episodeRef.get();
 
@@ -164,6 +201,10 @@ export async function getEpisodeById(animeId: string, episodeId: string): Promis
  */
 export async function getUserInteraction(animeId: string, userId: string): Promise<UserInteractionSerializable | null> {
     if (!animeId || !userId) {
+        return null;
+    }
+    const firestore = getFirestoreInstance();
+    if (!firestore) {
         return null;
     }
     const interactionRef = firestore.collection('animes').doc(animeId).collection('interactions').doc(userId);

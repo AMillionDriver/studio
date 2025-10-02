@@ -2,7 +2,7 @@
 'use server';
 
 import { getAuth } from "firebase-admin/auth";
-import { getAdminApp } from "@/lib/firebase/admin-sdk";
+import { FirebaseAdminInitializationError, getAdminApp } from "@/lib/firebase/admin-sdk";
 
 interface CreateUserParams {
     email: string;
@@ -39,14 +39,16 @@ export async function createUser(data: CreateUserParams): Promise<{ success: boo
 
     } catch (error: any) {
         console.error('Error creating new user:', error);
-        
+
         let errorMessage = 'An unknown error occurred while creating the user.';
-        if (error.code === 'auth/email-already-exists') {
+        if (error instanceof FirebaseAdminInitializationError) {
+            errorMessage = 'Firebase Admin SDK is not configured. Please set the required environment variables.';
+        } else if (error.code === 'auth/email-already-exists') {
             errorMessage = 'The email address is already in use by another account.';
         } else if (error.code === 'auth/invalid-password') {
             errorMessage = 'The password must be a string with at least 6 characters.';
         }
-        
+
         return { success: false, error: errorMessage };
     }
 }
