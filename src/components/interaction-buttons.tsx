@@ -34,7 +34,7 @@ export function InteractionButtons({
 }: InteractionButtonsProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { user } = useAuth(); // Use client-side auth context
+  const { user } = useAuth(); // Use client-side auth context which has the full User object
 
   const [optimisticVote, setOptimisticVote] = useOptimistic<OptimisticVote, 'like' | 'dislike'>(
     {
@@ -96,6 +96,7 @@ export function InteractionButtons({
     startTransition(() => {
       setOptimisticVote(voteType);
       // Pass the user's ID token for server-side verification
+      // user from useAuth() is the full client-side User object with getIdToken()
       user.getIdToken().then(idToken => {
         voteOnAnime(animeId, voteType, idToken);
       });
