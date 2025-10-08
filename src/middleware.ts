@@ -1,5 +1,6 @@
 
 import { createI18nMiddleware } from 'next-international/middleware';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
  
 const I18nMiddleware = createI18nMiddleware({
@@ -9,7 +10,16 @@ const I18nMiddleware = createI18nMiddleware({
 });
  
 export function middleware(request: NextRequest) {
-  return I18nMiddleware(request);
+  try {
+    return I18nMiddleware(request);
+  } catch (error) {
+    console.error('Edge middleware failed', {
+      error,
+      url: request.nextUrl.href,
+    });
+
+    return NextResponse.rewrite(new URL('/500', request.url));
+  }
 }
  
 export const config = {
