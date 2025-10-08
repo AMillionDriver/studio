@@ -21,10 +21,13 @@ export async function POST(request: NextRequest) {
         });
         return NextResponse.json({ status: "success" });
     } catch (error) {
-        console.error("Error creating session cookie:", error);
+        console.error("Error creating session cookie", error);
         if (error instanceof FirebaseAdminInitializationError) {
+            console.error("Firebase Admin initialization failed while creating session cookie", {
+                message: error.message,
+            });
             return NextResponse.json(
-                { status: "error", message: "Firebase Admin SDK is not configured." },
+                { status: "error", message: error.message },
                 { status: 500 }
             );
         }
